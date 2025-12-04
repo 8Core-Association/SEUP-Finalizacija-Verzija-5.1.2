@@ -436,3 +436,12 @@ Dokumentacija ažurirana: README, struktura, changelog.
 - ♿ **Accessibility** - Jasno označeno za screen readere
 
 ---
+
+## 5.2.1 – [Naziv verzije]
+
+**Datum:** 04.12.2025
+
+### [Kategorija izmjena]
+- [Detalji izmjena]
+
+---
