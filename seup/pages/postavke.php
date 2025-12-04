@@ -633,7 +633,7 @@ print '<div class="seup-modal-body">';
 // TAB 1: Novi Unos
 print '<div class="seup-tab-content active" id="tab-novi-unos">';
 print '<form method="post" action="'.$_SERVER['PHP_SELF'].'" class="seup-form" id="form-novi-unos">';
-print '<div class="seup-form-grid"><div class="seup-form-group"><label class="seup-label">Korisnik</label><input type="text" name="ime_user" id="ime_user_novi" class="seup-input" list="user-list" placeholder="Odaberite korisnika iz liste" required autocomplete="off"><datalist id="user-list">';
+print '<div class="seup-form-grid"><div class="seup-form-group"><label class="seup-label">Korisnik</label><input type="text" name="ime_user" id="ime_user_novi" class="seup-input" list="user-list" placeholder="Unesite ime korisnika" required autocomplete="off"><datalist id="user-list">';
 foreach ($listUsers as $u) { print '<option value="'.htmlspecialchars($u->getFullName($langs)).'"></option>'; }
 print '</datalist></div><div class="seup-form-group"><label class="seup-label">Redni broj (0-99)</label><input type="number" name="redni_broj" id="redni_broj_novi" class="seup-input" min="0" max="99" required></div></div>';
 print '<div class="seup-form-group"><label class="seup-label">Radno mjesto</label><input type="text" name="radno_mjesto_korisnika" id="radno_mjesto_korisnika_novi" class="seup-input" required></div>';
