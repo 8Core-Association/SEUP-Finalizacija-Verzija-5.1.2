@@ -57,6 +57,18 @@ if ($resql_ustanova && $obj = $db->fetch_object($resql_ustanova)) {
   $ID_ustanove = (int)$obj->ID;
 }
 
+// === EXPORT TO CSV (GET request) ===
+if ($action === 'export_csv') {
+  $result = Interna_oznaka_korisnika_helper::exportToCSV($db, $ID_ustanove);
+
+  if ($result['success']) {
+    header('Location: ' . $result['download_url']);
+    exit;
+  } else {
+    setEventMessages($result['error'], null, 'errors');
+  }
+}
+
 // === AJAX HANDLERS ===
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -86,20 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     echo json_encode($result);
     exit;
-  }
-
-  // Export to CSV
-  if ($action === 'export_csv') {
-    $result = Interna_oznaka_korisnika_helper::exportToCSV($db, $ID_ustanove);
-
-    if ($result['success']) {
-      header('Content-Type: text/csv; charset=utf-8');
-      header('Content-Disposition: attachment; filename="' . $result['filename'] . '"');
-      header('Location: ' . $result['download_url']);
-      exit;
-    } else {
-      setEventMessages($result['error'], null, 'errors');
-    }
   }
 
   // Add new oznaka
