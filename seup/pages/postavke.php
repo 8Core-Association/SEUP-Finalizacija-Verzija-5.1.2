@@ -815,6 +815,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  // Auto-open modal based on hash or tab parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const tab = urlParams.get('tab');
+  const hash = window.location.hash.substring(1);
+
+  if (tab === 'trece_osobe' || hash === 'trece_osobe') {
+    const modal = document.getElementById('treceOsobeModal');
+    if (modal) {
+      modal.classList.add('show');
+    }
+  } else if (tab === 'arhivska_gradiva' || hash === 'arhivska_gradiva') {
+    const modal = document.getElementById('arhivskaGradivaModal');
+    if (modal) {
+      modal.classList.add('show');
+    }
+  } else if (tab === 'interne_oznake' || hash === 'interne_oznake') {
+    const modal = document.getElementById('interneOznakeModal');
+    if (modal) {
+      modal.classList.add('show');
+    }
+  }
+
   // Ustanova AJAX
   const form = document.getElementById('ustanova-form');
   const actionField = document.getElementById('form-action');
@@ -955,9 +977,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const tabButtons = document.querySelectorAll('.seup-tab-btn');
   const tabContents = document.querySelectorAll('.seup-tab-content');
 
+  console.log('Tab buttons found:', tabButtons.length);
+  console.log('Tab contents found:', tabContents.length);
+
   tabButtons.forEach(button => {
     button.addEventListener('click', function() {
       const targetTab = this.getAttribute('data-tab');
+      console.log('Switching to tab:', targetTab);
 
       tabButtons.forEach(btn => btn.classList.remove('active'));
       tabContents.forEach(content => content.classList.remove('active'));
@@ -982,6 +1008,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const editNazivInput = document.getElementById('radno_mjesto_korisnika_edit');
   const btnUpdate = document.getElementById('btn-update-oznaka');
   const btnDelete = document.getElementById('btn-delete-oznaka');
+
+  console.log('Autocomplete elements:', {
+    editInput: !!editInput,
+    autocompleteResults: !!autocompleteResults,
+    hiddenIdField: !!hiddenIdField,
+    editRbrInput: !!editRbrInput,
+    editNazivInput: !!editNazivInput,
+    btnUpdate: !!btnUpdate,
+    btnDelete: !!btnDelete
+  });
 
   let autocompleteTimeout = null;
 
@@ -1049,7 +1085,18 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
         `;
 
-        div.addEventListener('click', () => selectAutocompleteItem(item));
+        // Use mousedown instead of click to fire before blur event
+        div.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          selectAutocompleteItem(item);
+        });
+
+        // Keep click as fallback
+        div.addEventListener('click', (e) => {
+          e.preventDefault();
+          selectAutocompleteItem(item);
+        });
+
         autocompleteResults.appendChild(div);
       });
 
@@ -1057,17 +1104,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function selectAutocompleteItem(item) {
-      hiddenIdField.value = item.id;
-      editInput.value = item.ime;
-      editRbrInput.value = item.rbr;
-      editNazivInput.value = item.naziv;
+      console.log('Selecting autocomplete item:', item);
+
+      if (hiddenIdField) hiddenIdField.value = item.id;
+      if (editInput) editInput.value = item.ime;
+      if (editRbrInput) editRbrInput.value = item.rbr;
+      if (editNazivInput) editNazivInput.value = item.naziv;
 
       clearAutocompleteResults();
 
-      btnUpdate.disabled = false;
-      btnDelete.disabled = false;
+      if (btnUpdate) {
+        btnUpdate.disabled = false;
+        console.log('Update button enabled');
+      }
+      if (btnDelete) {
+        btnDelete.disabled = false;
+        console.log('Delete button enabled');
+      }
 
-      showMessage('Učitani podaci za: ' + item.ime, 'success', 2000);
+      if (typeof showMessage === 'function') {
+        showMessage('Učitani podaci za: ' + item.ime, 'success', 2000);
+      }
     }
 
     function clearAutocompleteResults() {
@@ -1090,7 +1147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     editInput.addEventListener('blur', function() {
       setTimeout(() => {
         clearAutocompleteResults();
-      }, 200);
+      }, 300);
     });
   }
 });
