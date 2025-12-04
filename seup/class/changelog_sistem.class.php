@@ -34,7 +34,7 @@ class Changelog_Sistem
      *
      * @var string
      */
-    const VERSION = '5.2.1';
+    const VERSION = '5.2.2';
 
     /**
      * Datum izdanja trenutne verzije (ISO format YYYY-MM-DD).
