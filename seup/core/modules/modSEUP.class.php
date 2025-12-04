@@ -493,6 +493,22 @@ $this->menu[$r++] = array(
     'picto'    => 'archive'
 );
 
+// 7.2) Korisnici (Interne Oznake)
+$this->menu[$r++] = array(
+    'fk_menu'  => 'fk_mainmenu=seup',
+    'type'     => 'left',
+    'titre'    => 'Korisnici',
+    'mainmenu' => 'seup',
+    'leftmenu' => 'korisnici',
+    'url'      => './seup/pages/korisnici.php',
+    'langs'    => 'seup@seup',
+    'position' => 1109,
+    'enabled'  => '1',
+    'perms'    => '$user->admin',
+    'user'     => 2,
+    'picto'    => 'user'
+);
+
 // 8) Postavke
 $this->menu[$r++] = array(
     'fk_menu'  => 'fk_mainmenu=seup',
