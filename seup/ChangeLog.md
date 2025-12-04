@@ -437,11 +437,64 @@ Dokumentacija ažurirana: README, struktura, changelog.
 
 ---
 
-## 5.2.1 – [Naziv verzije]
+## 5.2.1 – Omot Preview Actions
 
 **Datum:** 04.12.2025
 
-### [Kategorija izmjena]
-- [Detalji izmjena]
+### Nova funkcionalnost - Pregled omota iz tablice predmeta
+- 👁️ **Omot Preview Button** - Novi gumb "Pregled omota" u akcijama na predmeti.php
+- 🎯 **Brzi pristup** - Direktan pristup prepregledu omota iz liste predmeta bez navigacije na detalje
+- 🪟 **Modal prepregled** - Elegantan modal prozor s prikazom omota spisa
+- 🔄 **AJAX učitavanje** - Dinamičko učitavanje preview sadržaja bez osvježavanja stranice
+- ⚡ **Optimiziran workflow** - Brži pregled i ispis omota za više predmeta
+
+### UI/UX komponente
+- 🎨 **View Button** - Plava ikonica oka (👁️) u stupcu akcija
+- 🪟 **Preview Modal** - Puni modal s prikazom omota spisa (800px širina)
+- 🔄 **Loading State** - Animirani spinner dok se učitava sadržaj
+- ⚠️ **Error Handling** - Jasne poruke u slučaju greške pri učitavanju
+- 📱 **Responsive Design** - Optimizirano za desktop i mobile uređaje
+
+### Backend integracija
+- 🔧 **predmeti.php** - Dodana funkcionalnost za preview akciju
+  - Event handler za `.seup-btn-view` gumb
+  - `openOmotPreviewModal(predmetId)` - Funkcija za otvaranje modala
+  - AJAX poziv na `/custom/seup/pages/predmet.php` s akcijom `preview_omot`
+
+- 🔌 **AJAX Endpoint** - Integracija s postojećim `preview_omot` akcijom
+  - GET request s `id` parametrom
+  - JSON response sa `preview_html` ili `error`
+  - Dinamičko renderiranje sadržaja u modal
+
+### Frontend komponente
+- 🎨 **Stilovi integracija** - CSS definicije za:
+  - `.seup-btn-view` - Plavi view gumb (primary-100 background)
+  - `.seup-loading-message` - Loading spinner za preview
+  - Modal responzivnost (max-width: 800px, max-height: 90vh)
+
+- ⚡ **JavaScript event handling**
+  - Click handler na sve `.seup-btn-view` gumbove
+  - `closeOmotPreviewModal()` - Zatvaranje modala
+  - Modal backdrop click handling
+  - Close button event listeners
+
+### User Experience prednosti
+- 🚀 **Ubrzani workflow** - Ne treba ulaziti u detalje predmeta za pregled omota
+- 🎯 **Masovno procesiranje** - Lako pregledavanje omota za više predmeta zaredom
+- 💡 **Intuitivno** - Ikonica oka jasno komunicira funkciju
+- 🔄 **Seamless** - Bez prekida korisničkog iskustva, sve u istom prozoru
+- 📋 **Previewing Before Print** - Mogućnost pregleda prije ispisa
+
+### Tehničke značajke
+- ⚡ **Async Loading** - Ne blokira UI dok se učitava preview
+- 🔒 **Permission Checks** - Poštuje iste provjere kao i detalji predmeta
+- 🛡️ **Error Recovery** - Graceful degradation u slučaju greške
+- 📊 **Data Consistency** - Koristi iste podatke kao i generiranje PDF-a
+
+### Integracija s postojećim sustavom
+- 🔗 **Kompatibilnost** - Koristi postojeću `preview_omot` akciju iz predmet.php
+- 🎯 **Reusable Code** - Ne duplicira logiku, samo dodaje novi UI entry point
+- 🔄 **Future Ready** - Postavlja temelje za dodatne bulk akcije
+- 📦 **Modular Design** - Lako proširivo na druge tipove pregleda
 
 ---
