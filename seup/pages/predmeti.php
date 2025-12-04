@@ -316,23 +316,44 @@ print '<input type="text" id="searchInput" class="seup-search-input" placeholder
 print '</div>';
 print '</div>';
 print '<div class="seup-filter-controls">';
-print '<select id="filterUstanova" class="seup-filter-select">';
-print '<option value="">Sve ustanove</option>';
-// Add unique ustanove from predmeti
-$ustanove = array_unique(array_filter(array_column($predmeti, 'name_ustanova')));
-foreach ($ustanove as $ustanova) {
-    print '<option value="' . htmlspecialchars($ustanova) . '">' . htmlspecialchars($ustanova) . '</option>';
+
+// Filter: Dodijeljeno (Assigned Users)
+print '<select id="filterDodijeljeno" class="seup-filter-select">';
+print '<option value="">Svi korisnici</option>';
+$assignedUsers = [];
+foreach ($predmeti as $p) {
+    if (!empty($p->fk_user_assigned) && !empty($p->assigned_firstname)) {
+        $userId = $p->fk_user_assigned;
+        $fullName = $p->assigned_firstname . ' ' . $p->assigned_lastname;
+        $assignedUsers[$userId] = $fullName;
+    }
+}
+ksort($assignedUsers);
+foreach ($assignedUsers as $userId => $fullName) {
+    print '<option value="' . htmlspecialchars($fullName) . '">' . htmlspecialchars($fullName) . '</option>';
 }
 print '</select>';
+
+// Filter: Pošiljatelj
+print '<select id="filterPosiljatelj" class="seup-filter-select">';
+print '<option value="">Svi pošiljatelji</option>';
+$posiljatelji = array_unique(array_filter(array_column($predmeti, 'posiljatelj_naziv')));
+sort($posiljatelji);
+foreach ($posiljatelji as $posiljatelj) {
+    print '<option value="' . htmlspecialchars($posiljatelj) . '">' . htmlspecialchars($posiljatelj) . '</option>';
+}
+print '</select>';
+
+// Filter: Godine
 print '<select id="filterGodina" class="seup-filter-select">';
 print '<option value="">Sve godine</option>';
-// Add unique godine from predmeti
 $godine = array_unique(array_filter(array_column($predmeti, 'godina')));
 sort($godine);
 foreach ($godine as $godina) {
     print '<option value="' . htmlspecialchars($godina) . '">20' . htmlspecialchars($godina) . '</option>';
 }
 print '</select>';
+
 print '</div>';
 print '</div>';
 
@@ -667,37 +688,46 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Enhanced search and filter functionality
     const searchInput = document.getElementById('searchInput');
-    const filterUstanova = document.getElementById('filterUstanova');
-    const filterZaposlenik = document.getElementById('filterZaposlenik');
+    const filterDodijeljeno = document.getElementById('filterDodijeljeno');
+    const filterPosiljatelj = document.getElementById('filterPosiljatelj');
     const filterGodina = document.getElementById('filterGodina');
     const tableRows = document.querySelectorAll('.seup-table-row[data-id]');
     const visibleCountSpan = document.getElementById('visibleCount');
 
     function filterTable() {
         const searchTerm = searchInput.value.toLowerCase();
-        const selectedUstanova = filterUstanova.value;
-        const selectedZaposlenik = filterZaposlenik.value;
+        const selectedDodijeljeno = filterDodijeljeno.value;
+        const selectedPosiljatelj = filterPosiljatelj.value;
         const selectedGodina = filterGodina.value;
         let visibleCount = 0;
 
         tableRows.forEach(row => {
             const cells = row.querySelectorAll('.seup-table-td');
             const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
-            
+
             // Check search term
             const matchesSearch = !searchTerm || rowText.includes(searchTerm);
-            
-            // Check ustanova filter
-            let matchesUstanova = true;
-            if (selectedUstanova) {
-                const ustanovaCell = cells[5]; // zaposlenik column now contains ustanova info
-                matchesUstanova = ustanovaCell.textContent.trim() === selectedUstanova;
+
+            // Check Dodijeljeno filter (column 7 - Dodijeljeno)
+            let matchesDodijeljeno = true;
+            if (selectedDodijeljeno) {
+                const dodijeljenoCell = cells[7];
+                const dodijeljenoText = dodijeljenoCell.textContent.trim();
+                matchesDodijeljeno = dodijeljenoText.includes(selectedDodijeljeno);
             }
 
-            // Check godina filter
+            // Check Pošiljatelj filter (column 3 - Pošiljatelj)
+            let matchesPosiljatelj = true;
+            if (selectedPosiljatelj) {
+                const posiljateljCell = cells[3];
+                const posiljateljText = posiljateljCell.textContent.trim();
+                matchesPosiljatelj = posiljateljText.includes(selectedPosiljatelj);
+            }
+
+            // Check godina filter (column 1 - Klasa)
             let matchesGodina = true;
             if (selectedGodina) {
-                const klasaCell = cells[1]; // klasa column contains year
+                const klasaCell = cells[1];
                 const klasaText = klasaCell.textContent;
                 // Extract year from klasa format: XXX-XX/YY-XX/X
                 const yearMatch = klasaText.match(/\/(\d{2})-/);
@@ -706,17 +736,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
 
-            if (matchesSearch && matchesUstanova && matchesGodina) {
-    row.style.display = '';
-    visibleCount++;
-    // Add staggered animation
-    row.style.animationDelay = `${visibleCount * 50}ms`;
-    row.classList.add('animate-fade-in-up');
-} else {
-    row.style.display = 'none';
-    row.classList.remove('animate-fade-in-up');
-}
-
+            if (matchesSearch && matchesDodijeljeno && matchesPosiljatelj && matchesGodina) {
+                row.style.display = '';
+                visibleCount++;
+                // Add staggered animation
+                row.style.animationDelay = `${visibleCount * 50}ms`;
+                row.classList.add('animate-fade-in-up');
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('animate-fade-in-up');
+            }
         });
 
         // Update visible count
@@ -728,9 +757,13 @@ document.addEventListener("DOMContentLoaded", function() {
     if (searchInput) {
         searchInput.addEventListener('input', debounce(filterTable, 300));
     }
-    
-    if (filterUstanova) {
-        filterUstanova.addEventListener('change', filterTable);
+
+    if (filterDodijeljeno) {
+        filterDodijeljeno.addEventListener('change', filterTable);
+    }
+
+    if (filterPosiljatelj) {
+        filterPosiljatelj.addEventListener('change', filterTable);
     }
 
     if (filterGodina) {
