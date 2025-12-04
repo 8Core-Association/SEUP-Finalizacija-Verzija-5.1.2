@@ -319,7 +319,7 @@ print '<div class="seup-filter-controls">';
 
 // Filter: Dodijeljeno (Assigned Users) - Load ALL active users from llx_user
 print '<select id="filterDodijeljeno" class="seup-filter-select">';
-print '<option value="">Svi korisnici</option>';
+print '<option value="">Dodjeljeno</option>';
 $allActiveUsers = [];
 $sql_users = "SELECT rowid, firstname, lastname FROM " . MAIN_DB_PREFIX . "user WHERE statut = 1 ORDER BY lastname, firstname";
 $resql_users = $db->query($sql_users);
@@ -351,6 +351,23 @@ sort($godine);
 foreach ($godine as $godina) {
     print '<option value="' . htmlspecialchars($godina) . '">20' . htmlspecialchars($godina) . '</option>';
 }
+print '</select>';
+
+// Filter: Mjeseci
+print '<select id="filterMjesec" class="seup-filter-select">';
+print '<option value="">Svi mjeseci</option>';
+print '<option value="01">Siječanj</option>';
+print '<option value="02">Veljača</option>';
+print '<option value="03">Ožujak</option>';
+print '<option value="04">Travanj</option>';
+print '<option value="05">Svibanj</option>';
+print '<option value="06">Lipanj</option>';
+print '<option value="07">Srpanj</option>';
+print '<option value="08">Kolovoz</option>';
+print '<option value="09">Rujan</option>';
+print '<option value="10">Listopad</option>';
+print '<option value="11">Studeni</option>';
+print '<option value="12">Prosinac</option>';
 print '</select>';
 
 print '</div>';
@@ -403,7 +420,17 @@ if (count($predmeti)) {
         
         $rowClass = ($index % 2 === 0) ? 'seup-table-row-even' : 'seup-table-row-odd';
         $assignedUserId = !empty($predmet->fk_user_assigned) ? (int)$predmet->fk_user_assigned : '';
-        print '<tr class="seup-table-row ' . $rowClass . '" data-id="' . $predmet->ID_predmeta . '" data-assigned-id="' . $assignedUserId . '">';
+
+        // Extract month from tstamp_created for filtering
+        $monthValue = '';
+        if (!empty($predmet->datum_otvaranja)) {
+            $dateParts = explode('/', $predmet->datum_otvaranja);
+            if (count($dateParts) === 3) {
+                $monthValue = $dateParts[1]; // MM from DD/MM/YYYY
+            }
+        }
+
+        print '<tr class="seup-table-row ' . $rowClass . '" data-id="' . $predmet->ID_predmeta . '" data-assigned-id="' . $assignedUserId . '" data-month="' . $monthValue . '">';
         
         print '<td class="seup-table-td">';
         print '<span class="seup-badge seup-badge-neutral">' . $predmet->ID_predmeta . '</span>';
@@ -691,6 +718,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const filterDodijeljeno = document.getElementById('filterDodijeljeno');
     const filterPosiljatelj = document.getElementById('filterPosiljatelj');
     const filterGodina = document.getElementById('filterGodina');
+    const filterMjesec = document.getElementById('filterMjesec');
     const tableRows = document.querySelectorAll('.seup-table-row[data-id]');
     const visibleCountSpan = document.getElementById('visibleCount');
 
@@ -699,6 +727,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const selectedDodijeljeno = filterDodijeljeno.value;
         const selectedPosiljatelj = filterPosiljatelj.value;
         const selectedGodina = filterGodina.value;
+        const selectedMjesec = filterMjesec.value;
         let visibleCount = 0;
 
         tableRows.forEach(row => {
@@ -735,7 +764,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
 
-            if (matchesSearch && matchesDodijeljeno && matchesPosiljatelj && matchesGodina) {
+            // Check mjesec filter (from data-month attribute)
+            let matchesMjesec = true;
+            if (selectedMjesec) {
+                const monthAttr = row.getAttribute('data-month');
+                matchesMjesec = monthAttr === selectedMjesec;
+            }
+
+            if (matchesSearch && matchesDodijeljeno && matchesPosiljatelj && matchesGodina && matchesMjesec) {
                 row.style.display = '';
                 visibleCount++;
                 // Add staggered animation
@@ -767,6 +803,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (filterGodina) {
         filterGodina.addEventListener('change', filterTable);
+    }
+
+    if (filterMjesec) {
+        filterMjesec.addEventListener('change', filterTable);
     }
 
     // Enhanced row interactions
