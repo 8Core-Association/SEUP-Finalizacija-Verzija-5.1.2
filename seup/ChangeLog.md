@@ -498,3 +498,89 @@ Dokumentacija ažurirana: README, struktura, changelog.
 - 📦 **Modular Design** - Lako proširivo na druge tipove pregleda
 
 ---
+
+## 5.2.2 – Interna Oznaka Korisnika & Korisnici.php Refaktoriranje
+
+**Datum:** 04.12.2025
+
+### Nova funkcionalnost - Interna oznaka korisnika
+- 🔢 **User Prefix System** - Dvoznamenkasti prefix za svakog korisnika (npr. 01, 02, 03)
+- 🎯 **OMAT Integration** - Prefix se automatski dodaje u OMAT brojeve predmeta
+- 🔗 **User Association** - Svaki korisnik dobiva vlastitu identifikacijsku oznaku
+- 🪪 **Unique Identifiers** - Jednostavnije praćenje i organizacija dokumenata po korisnicima
+
+### Refaktorirani korisnici.php
+- 🎨 **Moderni dizajn** - Potpuno redizajnirana stranica s modernim UI komponentama
+- 🪟 **Edit Modal** - Novi modal za uređivanje korisničkih podataka
+  - Jednostavna forma s jasnim poljima
+  - Real-time validacija unosa
+  - Responsive dizajn
+  - AJAX spremanje bez osvježavanja stranice
+
+### Database strukture
+- 🗃️ **Dodan stupac u llx_user**:
+  - `interna_oznaka_korisnika` (VARCHAR) - 2-char prefix za OMAT brojeve
+  - Spremaju se vrijednosti kao "01", "02", "03", itd.
+
+### Backend komponente
+- 🔧 **interna_oznaka_korisnika_helper.class.php** - Core logika
+  - `getNextAvailableOznaka()` - Automatska alokacija sljedećeg slobodnog broja
+  - `getOznakaByUserId()` - Dohvaćanje oznake za korisnika
+  - `getAllOznake()` - Lista svih korištenih oznaka
+  - `updateOznakaForUser()` - Ažuriranje oznake
+
+- 🔌 **korisnici.php** - Ažuriran za rad s internim oznakama
+  - Modal za uređivanje s poljem za internu oznaku
+  - AJAX endpoint za spremanje (`action=update_user`)
+  - Validacija i sanitizacija unosa
+  - Prikaz interne oznake u tablici korisnika
+
+### Frontend komponente
+- 🎨 **korisnici.css** - Novi stilovi
+  - Modal dizajn za edit formu
+  - Input field styling
+  - Button states i hover efekti
+  - Responsive layout
+
+- ⚡ **korisnici.js** - JavaScript funkcionalnost
+  - `openEditModal()` - Otvaranje modala s podacima korisnika
+  - `saveUser()` - AJAX spremanje promjena
+  - `closeEditModal()` - Zatvaranje modala
+  - Form validation logika
+
+### UI/UX komponente
+- 📋 **User Table** - Proširena tablica s novim stupcima
+  - Interna oznaka vidljiva u tablici
+  - Edit gumb za svaki red
+  - Vizualna indikacija admin korisnika
+
+- 🎯 **Edit Modal Features**
+  - Auto-fill postojećih podataka
+  - Validacija 2-char formata za internu oznaku
+  - Loading state tijekom spremanja
+  - Success/error feedback
+
+### Sigurnosne značajke
+- 🔐 **Permission checks** - Samo admin može uređivati korisnike
+- 🛡️ **Data validation** - Format provjera za internu oznaku
+- 🧹 **XSS zaštita** - Sanitizacija svih inputa
+- ✅ **SQL injection zaštita** - Prepared statements u svim upitima
+
+### Integracija s OMAT sustavom
+- 🔗 **Automatsko umetanje** - Prefix se dodaje u OMAT brojeve pri generiranju
+- 📊 **Konzistentnost** - Jedinstveni format svih dokumenata po korisnicima
+- 🎯 **Lakše praćenje** - Jednostavnije filtriranje i pretraživanje dokumenata
+
+### Tehničke optimizacije
+- ⚡ **Async Operations** - AJAX pozivi ne blokiraju UI
+- 💾 **Efficient Queries** - Optimizirani SQL upiti
+- 🔄 **Real-time Updates** - Trenutno osvježavanje prikaza nakon promjena
+- 📊 **Data Consistency** - Atomske transakcije za sve operacije
+
+### User Experience prednosti
+- 🚀 **Brzo uređivanje** - Modal omogućava brze promjene bez navigacije
+- 💡 **Intuitivno** - Jasna i jednostavna forma
+- 🎯 **Immediate Feedback** - Korisnik odmah vidi rezultate akcija
+- 📱 **Mobile Friendly** - Optimizirano za sve veličine ekrana
+
+---
