@@ -38,7 +38,7 @@ require_once __DIR__ . '/../class/interna_oznaka_korisnika_helper.class.php';
 $langs->loadLangs(array("seup@seup", "admin"));
 
 // Provjera pristupa
-if (!$user->rights->seup->read) {
+if (!$user->rights->seup->korisnici->read) {
   accessforbidden();
 }
 
@@ -104,6 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Add new oznaka
   if ($action === 'add' && !empty($_POST)) {
+    if (!$user->rights->seup->korisnici->write) {
+      accessforbidden();
+    }
+
     $ime_user = GETPOST('ime_user', 'alphanohtml');
     $redni_broj = GETPOST('redni_broj', 'int');
     $radno_mjesto = GETPOST('radno_mjesto', 'alphanohtml');
@@ -121,6 +125,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Update oznaka
   if ($action === 'update' && !empty($_POST)) {
+    if (!$user->rights->seup->korisnici->write) {
+      accessforbidden();
+    }
+
     $ime_user = GETPOST('ime_user', 'alphanohtml');
     $redni_broj = GETPOST('redni_broj', 'int');
     $radno_mjesto = GETPOST('radno_mjesto', 'alphanohtml');
@@ -138,6 +146,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Delete oznaka
   if ($action === 'confirm_delete' && $confirm === 'yes') {
+    if (!$user->rights->seup->korisnici->delete) {
+      accessforbidden();
+    }
+
     $result = Interna_oznaka_korisnika_helper::deleteInternaOznaka($db, $id);
 
     if ($result['success']) {
@@ -205,7 +217,9 @@ if (!empty($stats)) {
 // Action buttons
 print '<div class="korisnici-actions" style="margin-bottom: 20px;">';
 if ($action !== 'add' && $action !== 'edit') {
-  print '<a href="' . $_SERVER['PHP_SELF'] . '?action=add" class="butAction">Dodaj Novog Korisnika</a>';
+  if ($user->rights->seup->korisnici->write) {
+    print '<a href="' . $_SERVER['PHP_SELF'] . '?action=add" class="butAction">Dodaj Novog Korisnika</a>';
+  }
   if ($stats['total'] > 0) {
     print '<a href="' . $_SERVER['PHP_SELF'] . '?action=export_csv" class="butAction" style="margin-left: 10px;">Izvezi u CSV</a>';
   }
@@ -214,6 +228,10 @@ print '</div>';
 
 // Confirmation dialog for delete
 if ($action === 'delete' && $id > 0) {
+  if (!$user->rights->seup->korisnici->delete) {
+    accessforbidden();
+  }
+
   $formconfirm = $form->formconfirm(
     $_SERVER['PHP_SELF'] . '?id=' . $id,
     'Brisanje Interne Oznake Korisnika',
@@ -228,6 +246,10 @@ if ($action === 'delete' && $id > 0) {
 
 // === ADD/EDIT FORM ===
 if ($action === 'add' || $action === 'edit') {
+  if (!$user->rights->seup->korisnici->write) {
+    accessforbidden();
+  }
+
   print '<div class="korisnici-form-container" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px;">';
 
   print '<h3>' . ($action === 'add' ? 'Dodaj Novog Korisnika' : 'Uredi Korisnika') . '</h3>';
@@ -322,12 +344,19 @@ if ($action !== 'add' && $action !== 'edit') {
       print '<td style="padding: 12px;">' . htmlspecialchars($oznaka->naziv) . '</td>';
 
       print '<td style="padding: 12px; text-align: right;">';
-      print '<a href="' . $_SERVER['PHP_SELF'] . '?action=edit&id=' . $oznaka->ID . '" class="editfielda" title="Uredi" style="margin-right: 10px;">';
-      print img_edit();
-      print '</a>';
-      print '<a href="' . $_SERVER['PHP_SELF'] . '?action=delete&id=' . $oznaka->ID . '" class="deletefielda" title="Obriši">';
-      print img_delete();
-      print '</a>';
+
+      if ($user->rights->seup->korisnici->write) {
+        print '<a href="' . $_SERVER['PHP_SELF'] . '?action=edit&id=' . $oznaka->ID . '" class="editfielda" title="Uredi" style="margin-right: 10px;">';
+        print img_edit();
+        print '</a>';
+      }
+
+      if ($user->rights->seup->korisnici->delete) {
+        print '<a href="' . $_SERVER['PHP_SELF'] . '?action=delete&id=' . $oznaka->ID . '" class="deletefielda" title="Obriši">';
+        print img_delete();
+        print '</a>';
+      }
+
       print '</td>';
 
       print '</tr>';

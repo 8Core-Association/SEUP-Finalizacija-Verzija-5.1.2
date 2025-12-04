@@ -315,6 +315,26 @@ class modSEUP extends DolibarrModules
 		*/
 		/* END MODULEBUILDER PERMISSIONS */
 
+		// SEUP Permissions
+		$o = 1;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 1);
+		$this->rights[$r][1] = 'Čitanje korisnika (interne oznake)';
+		$this->rights[$r][4] = 'korisnici';
+		$this->rights[$r][5] = 'read';
+		$r++;
+
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 2);
+		$this->rights[$r][1] = 'Kreiranje/ažuriranje korisnika (interne oznake)';
+		$this->rights[$r][4] = 'korisnici';
+		$this->rights[$r][5] = 'write';
+		$r++;
+
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 3);
+		$this->rights[$r][1] = 'Brisanje korisnika (interne oznake)';
+		$this->rights[$r][4] = 'korisnici';
+		$this->rights[$r][5] = 'delete';
+		$r++;
+
 
 		// Main menu entries to add
 		$this->menu = array();
@@ -504,7 +524,7 @@ $this->menu[$r++] = array(
     'langs'    => 'seup@seup',
     'position' => 1109,
     'enabled'  => '1',
-    'perms'    => '$user->admin',
+    'perms'    => '$user->rights->seup->korisnici->read',
     'user'     => 2,
     'picto'    => 'user'
 );
