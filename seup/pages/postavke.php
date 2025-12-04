@@ -54,6 +54,7 @@ $langs->loadLangs(array("seup@seup"));
 require_once __DIR__ . '/../class/klasifikacijska_oznaka.class.php';
 require_once __DIR__ . '/../class/oznaka_ustanove.class.php';
 require_once __DIR__ . '/../class/interna_oznaka_korisnika.class.php';
+require_once __DIR__ . '/../class/interna_oznaka_korisnika_helper.class.php';
 require_once __DIR__ . '/../class/changelog_sistem.class.php';
 
 // === Helpers ===
@@ -138,31 +139,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // 1.a Add interna oznaka
   if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'add') {
-    $interna_oznaka_korisnika = new Interna_oznaka_korisnika();
-    $interna_oznaka_korisnika->setIme_prezime(GETPOST('ime_user', 'alphanohtml'));
-    $interna_oznaka_korisnika->setRbr_korisnika(GETPOST('redni_broj', 'int'));
-    $interna_oznaka_korisnika->setRadno_mjesto_korisnika(GETPOST('radno_mjesto_korisnika', 'alphanohtml'));
+    $ime_user = GETPOST('ime_user', 'alphanohtml');
+    $redni_broj = GETPOST('redni_broj', 'int');
+    $radno_mjesto = GETPOST('radno_mjesto_korisnika', 'alphanohtml');
 
-    if (empty($interna_oznaka_korisnika->getIme_prezime()) || $interna_oznaka_korisnika->getRbr_korisnika()==='' || empty($interna_oznaka_korisnika->getRadno_mjesto_korisnika())) {
-      setEventMessages($langs->trans("All fields are required"), null, 'errors');
-    } elseif (!preg_match('/^\d{1,2}$/', (string)$interna_oznaka_korisnika->getRbr_korisnika())) {
-      setEventMessages($langs->trans("Invalid serial number (vrijednosti moraju biti u rasponu 0 - 99)"), null, 'errors');
+    $result = Interna_oznaka_korisnika_helper::addInternaOznaka($db, $ID_ustanove, $ime_user, $redni_broj, $radno_mjesto);
+
+    if ($result['success']) {
+      setEventMessages($result['message'], null, 'mesgs');
     } else {
-      $resCheck = $db->query("SELECT COUNT(*) as cnt FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE rbr = '" . $db->escape($interna_oznaka_korisnika->getRbr_korisnika()) . "'");
-      if ($resCheck) {
-        $obj = $db->fetch_object($resCheck);
-        if ($obj->cnt > 0) setEventMessages($langs->trans("Korisnik s tim rednim brojem vec postoji u bazi"), null, 'errors');
-        else {
-          $db->begin();
-          $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika (ID_ustanove, ime_prezime, rbr, naziv) VALUES ("
-                . (int)$ID_ustanove . ", '"
-                . $db->escape($interna_oznaka_korisnika->getIme_prezime()) . "', '"
-                . $db->escape($interna_oznaka_korisnika->getRbr_korisnika()) . "', '"
-                . $db->escape($interna_oznaka_korisnika->getRadno_mjesto_korisnika()) . "')";
-          if ($db->query($sql)) { $db->commit(); setEventMessages($langs->trans("Intena Oznaka Korisnika uspjesno dodana"), null, 'mesgs'); }
-          else setEventMessages($langs->trans("Database error: ") . $db->lasterror(), null, 'errors');
-        }
-      }
+      setEventMessages($result['error'], null, 'errors');
     }
   }
 
@@ -173,34 +159,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rbr = GETPOST('redni_broj_edit', 'int');
     $naziv = GETPOST('radno_mjesto_korisnika_edit', 'alphanohtml');
 
-    if (!$id_oznake) {
-      setEventMessages($langs->trans("ID je obavezan za ažuriranje"), null, 'errors');
-    } elseif (empty($ime_user) || $rbr === '' || empty($naziv)) {
-      setEventMessages($langs->trans("Sva polja su obavezna"), null, 'errors');
-    } elseif (!preg_match('/^\d{1,2}$/', (string)$rbr)) {
-      setEventMessages($langs->trans("Invalid serial number (vrijednosti moraju biti u rasponu 0 - 99)"), null, 'errors');
+    $result = Interna_oznaka_korisnika_helper::updateInternaOznaka($db, $id_oznake, $ime_user, $rbr, $naziv);
+
+    if ($result['success']) {
+      setEventMessages($result['message'], null, 'mesgs');
     } else {
-      $resCheckDuplicate = $db->query("SELECT COUNT(*) as cnt FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE rbr = '" . $db->escape($rbr) . "' AND ID != " . (int)$id_oznake);
-      if ($resCheckDuplicate) {
-        $obj = $db->fetch_object($resCheckDuplicate);
-        if ($obj->cnt > 0) {
-          setEventMessages($langs->trans("Korisnik s tim rednim brojem vec postoji u bazi"), null, 'errors');
-        } else {
-          $db->begin();
-          $sql = "UPDATE " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika SET
-                  ime_prezime = '" . $db->escape($ime_user) . "',
-                  rbr = '" . $db->escape($rbr) . "',
-                  naziv = '" . $db->escape($naziv) . "'
-                  WHERE ID = " . (int)$id_oznake;
-          if ($db->query($sql)) {
-            $db->commit();
-            setEventMessages($langs->trans("Interna Oznaka Korisnika uspjesno azurirana"), null, 'mesgs');
-          } else {
-            $db->rollback();
-            setEventMessages($langs->trans("Database error: ") . $db->lasterror(), null, 'errors');
-          }
-        }
-      }
+      setEventMessages($result['error'], null, 'errors');
     }
   }
 
@@ -208,18 +172,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'delete') {
     $id_oznake = GETPOST('id_oznake', 'int');
 
-    if (!$id_oznake) {
-      setEventMessages($langs->trans("ID je obavezan za brisanje"), null, 'errors');
+    $result = Interna_oznaka_korisnika_helper::deleteInternaOznaka($db, $id_oznake);
+
+    if ($result['success']) {
+      setEventMessages($result['message'], null, 'mesgs');
     } else {
-      $db->begin();
-      $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE ID = " . (int)$id_oznake;
-      if ($db->query($sql)) {
-        $db->commit();
-        setEventMessages($langs->trans("Interna Oznaka Korisnika uspjesno obrisana"), null, 'mesgs');
-      } else {
-        $db->rollback();
-        setEventMessages($langs->trans("Database error: ") . $db->lasterror(), null, 'errors');
-      }
+      setEventMessages($result['error'], null, 'errors');
     }
   }
 
@@ -229,28 +187,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
 
     $search = GETPOST('search', 'alphanohtml');
-    if (strlen($search) < 3) {
-      echo json_encode(['success' => false, 'message' => 'Minimalno 3 slova']);
-      exit;
-    }
+    $result = Interna_oznaka_korisnika_helper::searchInterneOznake($db, $search);
 
-    $sql = "SELECT ID, ime_prezime, rbr, naziv FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE ime_prezime LIKE '%" . $db->escape($search) . "%' ORDER BY ime_prezime ASC LIMIT 10";
-    $resql = $db->query($sql);
-
-    $results = [];
-    if ($resql) {
-      while ($obj = $db->fetch_object($resql)) {
-        $results[] = [
-          'id' => (int)$obj->ID,
-          'ime' => $obj->ime_prezime,
-          'rbr' => (int)$obj->rbr,
-          'naziv' => $obj->naziv,
-          'label' => $obj->ime_prezime . ' [' . sprintf('%02d', $obj->rbr) . '] - ' . $obj->naziv
-        ];
-      }
-    }
-
-    echo json_encode(['success' => true, 'results' => $results]);
+    echo json_encode($result);
     exit;
   }
 
@@ -260,30 +199,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
 
     $ime_user = GETPOST('ime_user', 'alphanohtml');
-    if (empty($ime_user)) {
+    $result = Interna_oznaka_korisnika_helper::getUserData($db, $ime_user);
+
+    if (!$result['success'] && isset($result['error'])) {
       http_response_code(400);
-      echo json_encode(['success' => false, 'error' => 'Ime korisnika nije poslano']);
-      exit;
     }
 
-    $sql = "SELECT rbr, naziv FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE ime_prezime = '" . $db->escape($ime_user) . "' LIMIT 1";
-    $resql = $db->query($sql);
-
-    if ($resql && $db->num_rows($resql) > 0) {
-      $obj = $db->fetch_object($resql);
-      echo json_encode([
-        'success' => true,
-        'data' => [
-          'redni_broj' => (int)$obj->rbr,
-          'radno_mjesto' => $obj->naziv
-        ]
-      ]);
-    } else {
-      echo json_encode([
-        'success' => false,
-        'message' => 'Korisnik nema unesene podatke'
-      ]);
-    }
+    echo json_encode($result);
     exit;
   }
 
