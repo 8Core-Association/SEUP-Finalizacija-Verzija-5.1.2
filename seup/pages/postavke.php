@@ -647,7 +647,7 @@ print '<form method="post" action="'.$_SERVER['PHP_SELF'].'" class="seup-form" i
 print '<input type="hidden" name="id_oznake" id="hidden_id_oznake" value="">';
 print '<div class="seup-form-grid">';
 print '<div class="seup-form-group seup-autocomplete-container-interne">';
-print '<label class="seup-label">Pretraži postojeće korisnike (min 3 slova)</label>';
+print '<label class="seup-label">Pretraži korisnike (min 3 slova)</label>';
 print '<input type="text" name="ime_user_edit" id="ime_user_edit" class="seup-input" placeholder="Počnite pisati ime..." autocomplete="off">';
 print '<div id="autocomplete-interne-results" class="seup-autocomplete-dropdown"></div>';
 print '</div>';
