@@ -166,7 +166,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 
-  // 1.b AJAX endpoint za dohvat podataka internih oznaka korisnika
+  // 1.b UPDATE interna oznaka
+  if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'update') {
+    $id_oznake = GETPOST('id_oznake', 'int');
+    $ime_user = GETPOST('ime_user_edit', 'alphanohtml');
+    $rbr = GETPOST('redni_broj_edit', 'int');
+    $naziv = GETPOST('radno_mjesto_korisnika_edit', 'alphanohtml');
+
+    if (!$id_oznake) {
+      setEventMessages($langs->trans("ID je obavezan za ažuriranje"), null, 'errors');
+    } elseif (empty($ime_user) || $rbr === '' || empty($naziv)) {
+      setEventMessages($langs->trans("Sva polja su obavezna"), null, 'errors');
+    } elseif (!preg_match('/^\d{1,2}$/', (string)$rbr)) {
+      setEventMessages($langs->trans("Invalid serial number (vrijednosti moraju biti u rasponu 0 - 99)"), null, 'errors');
+    } else {
+      $resCheckDuplicate = $db->query("SELECT COUNT(*) as cnt FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE rbr = '" . $db->escape($rbr) . "' AND ID != " . (int)$id_oznake);
+      if ($resCheckDuplicate) {
+        $obj = $db->fetch_object($resCheckDuplicate);
+        if ($obj->cnt > 0) {
+          setEventMessages($langs->trans("Korisnik s tim rednim brojem vec postoji u bazi"), null, 'errors');
+        } else {
+          $db->begin();
+          $sql = "UPDATE " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika SET
+                  ime_prezime = '" . $db->escape($ime_user) . "',
+                  rbr = '" . $db->escape($rbr) . "',
+                  naziv = '" . $db->escape($naziv) . "'
+                  WHERE ID = " . (int)$id_oznake;
+          if ($db->query($sql)) {
+            $db->commit();
+            setEventMessages($langs->trans("Interna Oznaka Korisnika uspjesno azurirana"), null, 'mesgs');
+          } else {
+            $db->rollback();
+            setEventMessages($langs->trans("Database error: ") . $db->lasterror(), null, 'errors');
+          }
+        }
+      }
+    }
+  }
+
+  // 1.c DELETE interna oznaka
+  if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'delete') {
+    $id_oznake = GETPOST('id_oznake', 'int');
+
+    if (!$id_oznake) {
+      setEventMessages($langs->trans("ID je obavezan za brisanje"), null, 'errors');
+    } else {
+      $db->begin();
+      $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE ID = " . (int)$id_oznake;
+      if ($db->query($sql)) {
+        $db->commit();
+        setEventMessages($langs->trans("Interna Oznaka Korisnika uspjesno obrisana"), null, 'mesgs');
+      } else {
+        $db->rollback();
+        setEventMessages($langs->trans("Database error: ") . $db->lasterror(), null, 'errors');
+      }
+    }
+  }
+
+  // 1.d AJAX autocomplete za postojece unose (min 3 slova)
+  if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'autocomplete_postojeci') {
+    header('Content-Type: application/json; charset=UTF-8');
+    if (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
+
+    $search = GETPOST('search', 'alphanohtml');
+    if (strlen($search) < 3) {
+      echo json_encode(['success' => false, 'message' => 'Minimalno 3 slova']);
+      exit;
+    }
+
+    $sql = "SELECT ID, ime_prezime, rbr, naziv FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE ime_prezime LIKE '%" . $db->escape($search) . "%' ORDER BY ime_prezime ASC LIMIT 10";
+    $resql = $db->query($sql);
+
+    $results = [];
+    if ($resql) {
+      while ($obj = $db->fetch_object($resql)) {
+        $results[] = [
+          'id' => (int)$obj->ID,
+          'ime' => $obj->ime_prezime,
+          'rbr' => (int)$obj->rbr,
+          'naziv' => $obj->naziv,
+          'label' => $obj->ime_prezime . ' [' . sprintf('%02d', $obj->rbr) . '] - ' . $obj->naziv
+        ];
+      }
+    }
+
+    echo json_encode(['success' => true, 'results' => $results]);
+    exit;
+  }
+
+  // 1.e AJAX endpoint za dohvat podataka internih oznaka korisnika (OLD - keep for compatibility)
   if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'get_user_data') {
     header('Content-Type: application/json; charset=UTF-8');
     if (function_exists('ob_get_level') && ob_get_level() > 0) { ob_end_clean(); }
@@ -526,21 +614,53 @@ print '</div>';
 print '</div>';
 print '</div>';
 
-// Modal 2: Interne oznake korisnika
+// Modal 2: Interne oznake korisnika (REDESIGNED with TABS)
 print '<div class="seup-modal" id="interneOznakeModal">';
 print '<div class="seup-modal-content">';
 print '<div class="seup-modal-header">';
 print '<h5 class="seup-modal-title"><i class="fas fa-users me-2"></i>Interne Oznake Korisnika</h5>';
 print '<button type="button" class="seup-modal-close">&times;</button>';
 print '</div>';
+
+// Tab Navigation
+print '<div class="seup-tab-navigation">';
+print '<button type="button" class="seup-tab-btn active" data-tab="novi-unos"><i class="fas fa-plus-circle"></i> Novi Unos</button>';
+print '<button type="button" class="seup-tab-btn" data-tab="uredi-postojeci"><i class="fas fa-edit"></i> Uredi Postojeći</button>';
+print '</div>';
+
 print '<div class="seup-modal-body">';
-print '<form method="post" action="'.$_SERVER['PHP_SELF'].'" class="seup-form">';
-print '<div class="seup-form-grid"><div class="seup-form-group"><label class="seup-label">Korisnik</label><input type="text" name="ime_user" id="ime_user" class="seup-input" list="user-list" placeholder="Unesite ili odaberite korisnika" required autocomplete="off"><datalist id="user-list">';
+
+// TAB 1: Novi Unos
+print '<div class="seup-tab-content active" id="tab-novi-unos">';
+print '<form method="post" action="'.$_SERVER['PHP_SELF'].'" class="seup-form" id="form-novi-unos">';
+print '<div class="seup-form-grid"><div class="seup-form-group"><label class="seup-label">Korisnik</label><input type="text" name="ime_user" id="ime_user_novi" class="seup-input" list="user-list" placeholder="Odaberite korisnika iz liste" required autocomplete="off"><datalist id="user-list">';
 foreach ($listUsers as $u) { print '<option value="'.htmlspecialchars($u->getFullName($langs)).'"></option>'; }
-print '</datalist></div><div class="seup-form-group"><label class="seup-label">Redni broj (0-99)</label><input type="number" name="redni_broj" id="redni_broj" class="seup-input" min="0" max="99" required></div></div>';
-print '<div class="seup-form-group"><label class="seup-label">Radno mjesto</label><input type="text" name="radno_mjesto_korisnika" id="radno_mjesto_korisnika" class="seup-input" required></div>';
-print '<div class="seup-form-actions"><button type="submit" name="action_oznaka" value="add" class="seup-btn seup-btn-primary"><i class="fas fa-plus"></i> Dodaj</button><button type="submit" name="action_oznaka" value="update" class="seup-btn seup-btn-secondary"><i class="fas fa-edit"></i> Ažuriraj</button><button type="submit" name="action_oznaka" value="delete" class="seup-btn seup-btn-danger"><i class="fas fa-trash"></i> Obriši</button></div>';
+print '</datalist></div><div class="seup-form-group"><label class="seup-label">Redni broj (0-99)</label><input type="number" name="redni_broj" id="redni_broj_novi" class="seup-input" min="0" max="99" required></div></div>';
+print '<div class="seup-form-group"><label class="seup-label">Radno mjesto</label><input type="text" name="radno_mjesto_korisnika" id="radno_mjesto_korisnika_novi" class="seup-input" required></div>';
+print '<div class="seup-form-actions"><button type="submit" name="action_oznaka" value="add" class="seup-btn seup-btn-primary"><i class="fas fa-plus"></i> Dodaj Novi Unos</button></div>';
 print '</form>';
+print '</div>';
+
+// TAB 2: Uredi Postojeći (with autocomplete)
+print '<div class="seup-tab-content" id="tab-uredi-postojeci">';
+print '<form method="post" action="'.$_SERVER['PHP_SELF'].'" class="seup-form" id="form-uredi-postojeci">';
+print '<input type="hidden" name="id_oznake" id="hidden_id_oznake" value="">';
+print '<div class="seup-form-grid">';
+print '<div class="seup-form-group seup-autocomplete-container-interne">';
+print '<label class="seup-label">Pretraži postojeće korisnike (min 3 slova)</label>';
+print '<input type="text" name="ime_user_edit" id="ime_user_edit" class="seup-input" placeholder="Počnite pisati ime..." autocomplete="off">';
+print '<div id="autocomplete-interne-results" class="seup-autocomplete-dropdown"></div>';
+print '</div>';
+print '<div class="seup-form-group"><label class="seup-label">Redni broj (0-99)</label><input type="number" name="redni_broj_edit" id="redni_broj_edit" class="seup-input" min="0" max="99" required></div>';
+print '</div>';
+print '<div class="seup-form-group"><label class="seup-label">Radno mjesto</label><input type="text" name="radno_mjesto_korisnika_edit" id="radno_mjesto_korisnika_edit" class="seup-input" required></div>';
+print '<div class="seup-form-actions">';
+print '<button type="submit" name="action_oznaka" value="update" class="seup-btn seup-btn-secondary" id="btn-update-oznaka" disabled><i class="fas fa-edit"></i> Ažuriraj</button>';
+print '<button type="submit" name="action_oznaka" value="delete" class="seup-btn seup-btn-danger" id="btn-delete-oznaka" disabled><i class="fas fa-trash"></i> Obriši</button>';
+print '</div>';
+print '</form>';
+print '</div>';
+
 print '</div>';
 print '<div class="seup-modal-footer">';
 print '<button type="button" class="seup-btn seup-btn-secondary seup-modal-close">Zatvori</button>';
@@ -828,6 +948,151 @@ document.addEventListener('DOMContentLoaded', function() {
     el.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-triangle'}"></i> ${message}`;
     setTimeout(()=>{ el.classList.remove('show'); }, duration);
   };
+
+  // ============================================
+  // TAB SWITCHING for Interne Oznake Modal
+  // ============================================
+  const tabButtons = document.querySelectorAll('.seup-tab-btn');
+  const tabContents = document.querySelectorAll('.seup-tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const targetTab = this.getAttribute('data-tab');
+
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      this.classList.add('active');
+
+      if (targetTab === 'novi-unos') {
+        document.getElementById('tab-novi-unos').classList.add('active');
+      } else if (targetTab === 'uredi-postojeci') {
+        document.getElementById('tab-uredi-postojeci').classList.add('active');
+      }
+    });
+  });
+
+  // ============================================
+  // AUTOCOMPLETE for Existing Records (Uredi Postojeći tab)
+  // ============================================
+  const editInput = document.getElementById('ime_user_edit');
+  const autocompleteResults = document.getElementById('autocomplete-interne-results');
+  const hiddenIdField = document.getElementById('hidden_id_oznake');
+  const editRbrInput = document.getElementById('redni_broj_edit');
+  const editNazivInput = document.getElementById('radno_mjesto_korisnika_edit');
+  const btnUpdate = document.getElementById('btn-update-oznaka');
+  const btnDelete = document.getElementById('btn-delete-oznaka');
+
+  let autocompleteTimeout = null;
+
+  if (editInput && autocompleteResults) {
+    editInput.addEventListener('input', function() {
+      const query = this.value.trim();
+
+      clearTimeout(autocompleteTimeout);
+
+      if (query.length >= 3) {
+        autocompleteTimeout = setTimeout(() => {
+          fetchAutocomplete(query);
+        }, 300);
+      } else {
+        clearAutocompleteResults();
+        disableEditButtons();
+      }
+    });
+
+    async function fetchAutocomplete(search) {
+      try {
+        const formData = new FormData();
+        formData.append('action_oznaka', 'autocomplete_postojeci');
+        formData.append('search', search);
+
+        const response = await fetch('<?php echo $_SERVER["PHP_SELF"]; ?>', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.results.length > 0) {
+          displayAutocompleteResults(result.results);
+        } else {
+          autocompleteResults.innerHTML = '<div class="seup-autocomplete-item seup-autocomplete-empty">Nema rezultata</div>';
+          autocompleteResults.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Greška pri dohvaćanju autocomplete:', error);
+        autocompleteResults.innerHTML = '<div class="seup-autocomplete-item seup-autocomplete-empty">Greška pri pretraživanju</div>';
+        autocompleteResults.style.display = 'block';
+      }
+    }
+
+    function displayAutocompleteResults(results) {
+      autocompleteResults.innerHTML = '';
+
+      results.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'seup-autocomplete-item';
+        div.innerHTML = `
+          <div class="seup-autocomplete-item-content">
+            <strong>${item.ime}</strong>
+            <span class="seup-autocomplete-badge">[${String(item.rbr).padStart(2, '0')}]</span>
+            <span class="seup-autocomplete-subtitle">${item.naziv}</span>
+          </div>
+        `;
+
+        div.addEventListener('click', () => selectAutocompleteItem(item));
+        autocompleteResults.appendChild(div);
+      });
+
+      autocompleteResults.style.display = 'block';
+    }
+
+    function selectAutocompleteItem(item) {
+      hiddenIdField.value = item.id;
+      editInput.value = item.ime;
+      editRbrInput.value = item.rbr;
+      editNazivInput.value = item.naziv;
+
+      clearAutocompleteResults();
+
+      btnUpdate.disabled = false;
+      btnDelete.disabled = false;
+
+      showMessage('Učitani podaci za: ' + item.ime, 'success', 2000);
+    }
+
+    function clearAutocompleteResults() {
+      autocompleteResults.innerHTML = '';
+      autocompleteResults.style.display = 'none';
+    }
+
+    function disableEditButtons() {
+      hiddenIdField.value = '';
+      btnUpdate.disabled = true;
+      btnDelete.disabled = true;
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.seup-autocomplete-container-interne')) {
+        clearAutocompleteResults();
+      }
+    });
+
+    editInput.addEventListener('blur', function() {
+      setTimeout(() => {
+        clearAutocompleteResults();
+      }, 200);
+    });
+  }
 });
 </script>
 
@@ -840,6 +1105,227 @@ document.addEventListener('DOMContentLoaded', function() {
 .seup-btn.seup-loading{position:relative;color:transparent}
 .seup-btn.seup-loading::after{content:'';position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid transparent;border-top:2px solid currentColor;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===================================== */
+/* TAB NAVIGATION STYLES */
+/* ===================================== */
+.seup-tab-navigation {
+  display: flex;
+  gap: 0;
+  background: #f8fafc;
+  padding: 1.5rem 2.5rem 0 2.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.seup-tab-btn {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  margin-bottom: -2px;
+}
+
+.seup-tab-btn i {
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.seup-tab-btn:hover {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.seup-tab-btn:hover i {
+  transform: scale(1.1);
+}
+
+.seup-tab-btn.active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+  background: #ffffff;
+}
+
+.seup-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  border-radius: 3px 3px 0 0;
+}
+
+/* ===================================== */
+/* TAB CONTENT STYLES */
+/* ===================================== */
+.seup-tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.seup-tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================== */
+/* AUTOCOMPLETE DROPDOWN STYLES */
+/* ===================================== */
+.seup-autocomplete-container-interne {
+  position: relative;
+}
+
+.seup-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 0.5rem;
+  display: none;
+}
+
+.seup-autocomplete-item {
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.seup-autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.seup-autocomplete-item:hover {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-left: 3px solid #4f46e5;
+  padding-left: calc(1.25rem - 3px);
+}
+
+.seup-autocomplete-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.seup-autocomplete-item-content strong {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.seup-autocomplete-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.seup-autocomplete-subtitle {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.seup-autocomplete-empty {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  cursor: default;
+}
+
+.seup-autocomplete-empty:hover {
+  background: transparent;
+  border-left: none;
+  padding-left: 1.25rem;
+}
+
+/* ===================================== */
+/* DISABLED BUTTON STYLES */
+/* ===================================== */
+.seup-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.seup-btn:disabled:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.seup-btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.seup-btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* ===================================== */
+/* RESPONSIVE DESIGN */
+/* ===================================== */
+@media (max-width: 768px) {
+  .seup-tab-navigation {
+    padding: 1rem 1.5rem 0 1.5rem;
+  }
+
+  .seup-tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .seup-tab-btn i {
+    font-size: 1rem;
+  }
+
+  .seup-autocomplete-item {
+    padding: 0.75rem 1rem;
+  }
+
+  .seup-autocomplete-item-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
 </style>
 
 <?php llxFooter(); $db->close(); ?>
