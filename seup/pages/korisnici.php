@@ -231,7 +231,7 @@ if ($action === 'delete' && $id > 0) {
   }
 
   $formconfirm = $form->formconfirm(
-    $_SERVER['PHP_SELF'] . '?id=' . $id,
+    $_SERVER['PHP_SELF'] . '?id=' . $id . '&action=confirm_delete',
     'Brisanje Interne Oznake Zaposlenika',
     'Jeste li sigurni da želite obrisati ovu internu oznaku zaposlenika?',
     'confirm_delete',
