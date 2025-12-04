@@ -81,6 +81,23 @@ if ($action === 'export_csv') {
   }
 }
 
+// === DELETE OZNAKA (GET request with confirmation) ===
+if ($action === 'confirm_delete' && $confirm === 'yes') {
+  if (!$user->rights->seup->korisnici->delete) {
+    accessforbidden();
+  }
+
+  $result = Interna_oznaka_korisnika_helper::deleteInternaOznaka($db, $id);
+
+  if ($result['success']) {
+    setEventMessages($result['message'], null, 'mesgs');
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+  } else {
+    setEventMessages($result['error'], null, 'errors');
+  }
+}
+
 // === AJAX HANDLERS ===
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -144,23 +161,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $radno_mjesto = GETPOST('radno_mjesto', 'alphanohtml');
 
     $result = Interna_oznaka_korisnika_helper::updateInternaOznaka($db, $id, $ime_user, $redni_broj, $radno_mjesto);
-
-    if ($result['success']) {
-      setEventMessages($result['message'], null, 'mesgs');
-      header('Location: ' . $_SERVER['PHP_SELF']);
-      exit;
-    } else {
-      setEventMessages($result['error'], null, 'errors');
-    }
-  }
-
-  // Delete oznaka
-  if ($action === 'confirm_delete' && $confirm === 'yes') {
-    if (!$user->rights->seup->korisnici->delete) {
-      accessforbidden();
-    }
-
-    $result = Interna_oznaka_korisnika_helper::deleteInternaOznaka($db, $id);
 
     if ($result['success']) {
       setEventMessages($result['message'], null, 'mesgs');
