@@ -254,7 +254,7 @@ if ($action === 'add' || $action === 'edit') {
 
   print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . ($action === 'edit' ? '?id=' . $id : '') . '" class="korisnici-form">';
   print '<input type="hidden" name="token" value="' . newToken() . '">';
-  print '<input type="hidden" name="action" value="' . $action . '">';
+  print '<input type="hidden" name="action" value="' . ($action === 'edit' ? 'update' : $action) . '">';
 
   // Ime i prezime field with autocomplete
   print '<div class="form-group" style="margin-bottom: 20px;">';
