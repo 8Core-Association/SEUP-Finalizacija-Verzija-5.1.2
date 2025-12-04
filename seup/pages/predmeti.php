@@ -317,20 +317,19 @@ print '</div>';
 print '</div>';
 print '<div class="seup-filter-controls">';
 
-// Filter: Dodijeljeno (Assigned Users)
+// Filter: Dodijeljeno (Assigned Users) - Load ALL active users from llx_user
 print '<select id="filterDodijeljeno" class="seup-filter-select">';
 print '<option value="">Svi korisnici</option>';
-$assignedUsers = [];
-foreach ($predmeti as $p) {
-    if (!empty($p->fk_user_assigned) && !empty($p->assigned_firstname)) {
-        $userId = $p->fk_user_assigned;
-        $fullName = $p->assigned_firstname . ' ' . $p->assigned_lastname;
-        $assignedUsers[$userId] = $fullName;
+$allActiveUsers = [];
+$sql_users = "SELECT rowid, firstname, lastname FROM " . MAIN_DB_PREFIX . "user WHERE statut = 1 ORDER BY lastname, firstname";
+$resql_users = $db->query($sql_users);
+if ($resql_users) {
+    while ($user_obj = $db->fetch_object($resql_users)) {
+        $allActiveUsers[$user_obj->rowid] = trim($user_obj->firstname . ' ' . $user_obj->lastname);
     }
 }
-ksort($assignedUsers);
-foreach ($assignedUsers as $userId => $fullName) {
-    print '<option value="' . htmlspecialchars($fullName) . '">' . htmlspecialchars($fullName) . '</option>';
+foreach ($allActiveUsers as $userId => $fullName) {
+    print '<option value="' . (int)$userId . '">' . htmlspecialchars($fullName) . '</option>';
 }
 print '</select>';
 
@@ -403,7 +402,8 @@ if (count($predmeti)) {
             $predmet->predmet_rbr;
         
         $rowClass = ($index % 2 === 0) ? 'seup-table-row-even' : 'seup-table-row-odd';
-        print '<tr class="seup-table-row ' . $rowClass . '" data-id="' . $predmet->ID_predmeta . '">';
+        $assignedUserId = !empty($predmet->fk_user_assigned) ? (int)$predmet->fk_user_assigned : '';
+        print '<tr class="seup-table-row ' . $rowClass . '" data-id="' . $predmet->ID_predmeta . '" data-assigned-id="' . $assignedUserId . '">';
         
         print '<td class="seup-table-td">';
         print '<span class="seup-badge seup-badge-neutral">' . $predmet->ID_predmeta . '</span>';
@@ -708,12 +708,11 @@ document.addEventListener("DOMContentLoaded", function() {
             // Check search term
             const matchesSearch = !searchTerm || rowText.includes(searchTerm);
 
-            // Check Dodijeljeno filter (column 7 - Dodijeljeno)
+            // Check Dodijeljeno filter by data-assigned-id attribute
             let matchesDodijeljeno = true;
             if (selectedDodijeljeno) {
-                const dodijeljenoCell = cells[7];
-                const dodijeljenoText = dodijeljenoCell.textContent.trim();
-                matchesDodijeljeno = dodijeljenoText.includes(selectedDodijeljeno);
+                const assignedId = row.getAttribute('data-assigned-id');
+                matchesDodijeljeno = assignedId === selectedDodijeljeno;
             }
 
             // Check Pošiljatelj filter (column 3 - Pošiljatelj)
