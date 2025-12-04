@@ -218,7 +218,7 @@ if (!empty($stats)) {
 print '<div class="korisnici-actions" style="margin-bottom: 20px;">';
 if ($action !== 'add' && $action !== 'edit') {
   if ($user->rights->seup->korisnici->write) {
-    print '<a href="' . $_SERVER['PHP_SELF'] . '?action=add" class="butAction">Dodaj Novog Zaposlenika</a>';
+    print '<a href="' . $_SERVER['PHP_SELF'] . '?action=add" class="butAction">Nova interna oznaka</a>';
   }
   if ($stats['total'] > 0) {
     print '<a href="' . $_SERVER['PHP_SELF'] . '?action=export_csv" class="butAction" style="margin-left: 10px;">Izvezi u CSV</a>';
@@ -252,7 +252,7 @@ if ($action === 'add' || $action === 'edit') {
 
   print '<div class="korisnici-form-container" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px;">';
 
-  print '<h3>' . ($action === 'add' ? 'Dodaj Novog Zaposlenika' : 'Uredi Zaposlenika') . '</h3>';
+  print '<h3>' . ($action === 'add' ? 'Nova interna oznaka' : 'Uredi Zaposlenika') . '</h3>';
 
   print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . ($action === 'edit' ? '?id=' . $id : '') . '" class="korisnici-form">';
   print '<input type="hidden" name="token" value="' . newToken() . '">';
@@ -275,7 +275,7 @@ if ($action === 'add' || $action === 'edit') {
 
   // Redni broj field
   print '<div class="form-group" style="margin-bottom: 20px;">';
-  print '<label for="redni_broj" style="display: block; margin-bottom: 8px; font-weight: 500;">Redni Broj (0-99) *</label>';
+  print '<label for="redni_broj" style="display: block; margin-bottom: 8px; font-weight: 500;">Interna oznaka *</label>';
   print '<input type="number"
           id="redni_broj"
           name="redni_broj"
