@@ -250,7 +250,7 @@ if ($action === 'add' || $action === 'edit') {
 
   print '<div class="korisnici-form-container" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px;">';
 
-  print '<h3>' . ($action === 'add' ? 'Nova interna oznaka' : 'Uredi Zaposlenika') . '</h3>';
+  print '<h3>' . ($action === 'add' ? 'Nova interna oznaka' : 'Uredi oznaku zaposlenika') . '</h3>';
 
   print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . ($action === 'edit' ? '?id=' . $id : '') . '" class="korisnici-form">';
   print '<input type="hidden" name="token" value="' . newToken() . '">';
