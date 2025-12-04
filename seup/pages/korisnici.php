@@ -31,6 +31,7 @@ if (!$res) {
 // Potrebne uključene datoteke
 require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php';
+require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
 require_once __DIR__ . '/../lib/seup.lib.php';
 require_once __DIR__ . '/../class/interna_oznaka_korisnika_helper.class.php';
 
@@ -55,6 +56,17 @@ $sql_ustanova = "SELECT ID FROM " . MAIN_DB_PREFIX . "a_oznaka_ustanove LIMIT 1"
 $resql_ustanova = $db->query($sql_ustanova);
 if ($resql_ustanova && $obj = $db->fetch_object($resql_ustanova)) {
   $ID_ustanove = (int)$obj->ID;
+}
+
+// Load all active users from Dolibarr
+$listUsers = [];
+$userStatic = new User($db);
+$resql = $db->query("SELECT rowid FROM " . MAIN_DB_PREFIX . "user WHERE statut = 1 ORDER BY lastname ASC");
+if ($resql) {
+  while ($o = $db->fetch_object($resql)) {
+    $userStatic->fetch($o->rowid);
+    $listUsers[] = clone $userStatic;
+  }
 }
 
 // === EXPORT TO CSV (GET request) ===
@@ -256,19 +268,24 @@ if ($action === 'add' || $action === 'edit') {
   print '<input type="hidden" name="token" value="' . newToken() . '">';
   print '<input type="hidden" name="action" value="' . ($action === 'edit' ? 'update' : $action) . '">';
 
-  // Ime i prezime field with autocomplete
+  // Ime i prezime field with datalist (Dolibarr users)
   print '<div class="form-group" style="margin-bottom: 20px;">';
   print '<label for="ime_user" style="display: block; margin-bottom: 8px; font-weight: 500;">Ime i Prezime *</label>';
   print '<input type="text"
           id="ime_user"
           name="ime_user"
           class="flat minwidth300"
+          list="user-list-korisnici"
           value="' . ($editData ? htmlspecialchars($editData->ime_prezime) : '') . '"
           required
           autocomplete="off"
-          placeholder="Unesite ime i prezime..."
+          placeholder="Odaberite korisnika iz popisa..."
           style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">';
-  print '<div id="autocomplete-results" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; z-index: 1000; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>';
+  print '<datalist id="user-list-korisnici">';
+  foreach ($listUsers as $u) {
+    print '<option value="' . htmlspecialchars($u->getFullName($langs)) . '"></option>';
+  }
+  print '</datalist>';
   print '</div>';
 
   // Redni broj field
