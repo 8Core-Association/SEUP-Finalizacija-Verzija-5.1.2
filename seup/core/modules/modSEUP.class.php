@@ -513,16 +513,16 @@ $this->menu[$r++] = array(
     'picto'    => 'archive'
 );
 
-// 7.2) Korisnici (Interne Oznake)
+// 7) Popis zaposlenika (Interne Oznake)
 $this->menu[$r++] = array(
     'fk_menu'  => 'fk_mainmenu=seup',
     'type'     => 'left',
-    'titre'    => 'Korisnici',
+    'titre'    => 'Popis zaposlenika',
     'mainmenu' => 'seup',
     'leftmenu' => 'korisnici',
     'url'      => './seup/pages/korisnici.php',
     'langs'    => 'seup@seup',
-    'position' => 1109,
+    'position' => 1106,
     'enabled'  => '1',
     'perms'    => '$user->rights->seup->korisnici->read',
     'user'     => 2,

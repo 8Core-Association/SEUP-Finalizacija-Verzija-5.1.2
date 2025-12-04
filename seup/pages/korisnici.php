@@ -12,7 +12,7 @@
  */
 
 /**
- * SEUP Module - Korisnici (Interne Oznake Korisnika)
+ * SEUP Module - Popis zaposlenika (Interne Oznake Korisnika)
  * Stranica za upravljanje internim oznakama korisnika
  */
 
@@ -185,10 +185,10 @@ $stats = $statsResult['success'] ? $statsResult['stats'] : [];
 // === PAGE HEADER ===
 $morehead = '<link rel="stylesheet" type="text/css" href="' . DOL_URL_ROOT . '/custom/seup/css/korisnici.css">';
 $morehead .= '<script type="text/javascript" src="' . DOL_URL_ROOT . '/custom/seup/js/korisnici.js"></script>';
-llxHeader($morehead, 'Korisnici - Interne Oznake', '');
+llxHeader($morehead, 'Popis zaposlenika - Interne Oznake', '');
 
 // Page header
-print load_fiche_titre('Korisnici - Interne Oznake Korisnika', '', 'user');
+print load_fiche_titre('Popis zaposlenika - Interne Oznake Korisnika', '', 'user');
 
 // Statistics Cards
 if (!empty($stats)) {
@@ -218,7 +218,7 @@ if (!empty($stats)) {
 print '<div class="korisnici-actions" style="margin-bottom: 20px;">';
 if ($action !== 'add' && $action !== 'edit') {
   if ($user->rights->seup->korisnici->write) {
-    print '<a href="' . $_SERVER['PHP_SELF'] . '?action=add" class="butAction">Dodaj Novog Korisnika</a>';
+    print '<a href="' . $_SERVER['PHP_SELF'] . '?action=add" class="butAction">Dodaj Novog Zaposlenika</a>';
   }
   if ($stats['total'] > 0) {
     print '<a href="' . $_SERVER['PHP_SELF'] . '?action=export_csv" class="butAction" style="margin-left: 10px;">Izvezi u CSV</a>';
@@ -234,8 +234,8 @@ if ($action === 'delete' && $id > 0) {
 
   $formconfirm = $form->formconfirm(
     $_SERVER['PHP_SELF'] . '?id=' . $id,
-    'Brisanje Interne Oznake Korisnika',
-    'Jeste li sigurni da želite obrisati ovu internu oznaku korisnika?',
+    'Brisanje Interne Oznake Zaposlenika',
+    'Jeste li sigurni da želite obrisati ovu internu oznaku zaposlenika?',
     'confirm_delete',
     '',
     0,
@@ -252,7 +252,7 @@ if ($action === 'add' || $action === 'edit') {
 
   print '<div class="korisnici-form-container" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 800px;">';
 
-  print '<h3>' . ($action === 'add' ? 'Dodaj Novog Korisnika' : 'Uredi Korisnika') . '</h3>';
+  print '<h3>' . ($action === 'add' ? 'Dodaj Novog Zaposlenika' : 'Uredi Zaposlenika') . '</h3>';
 
   print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . ($action === 'edit' ? '?id=' . $id : '') . '" class="korisnici-form">';
   print '<input type="hidden" name="token" value="' . newToken() . '">';
@@ -319,7 +319,7 @@ if ($action !== 'add' && $action !== 'edit') {
   print '<div class="korisnici-list-container" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
 
   if (empty($oznake)) {
-    print '<div class="opacitymedium" style="text-align: center; padding: 40px;">Nema unesenih korisnika. Kliknite "Dodaj Novog Korisnika" za unos prvog korisnika.</div>';
+    print '<div class="opacitymedium" style="text-align: center; padding: 40px;">Nema unesenih zaposlenika. Kliknite "Dodaj Novog Zaposlenika" za unos prvog zaposlenika.</div>';
   } else {
     print '<table class="noborder centpercent korisnici-table">';
     print '<thead>';
