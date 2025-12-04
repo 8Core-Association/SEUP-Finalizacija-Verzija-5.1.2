@@ -324,7 +324,7 @@ if ($action !== 'add' && $action !== 'edit') {
     print '<tr class="liste_titre">';
     print '<th style="padding: 12px;">Rb.</th>';
     print '<th style="padding: 12px;">Ime i Prezime</th>';
-    print '<th style="padding: 12px; text-align: center;">Redni Broj</th>';
+    print '<th style="padding: 12px; text-align: center;">Interna oznaka</th>';
     print '<th style="padding: 12px;">Radno Mjesto</th>';
     print '<th style="padding: 12px; text-align: right; width: 150px;">Akcije</th>';
     print '</tr>';
