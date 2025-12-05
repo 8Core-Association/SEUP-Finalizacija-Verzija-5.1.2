@@ -642,3 +642,82 @@ Dokumentacija ažurirana: README, struktura, changelog.
 - 🎯 **Accurate Data** - Ispravno dohvaćanje svih podataka o zaprimanjima
 
 ---
+
+## 5.2.4 – Code Cleanup & Optimization
+
+**Datum:** 05.12.2025
+
+### Code Refactoring
+- 🧹 **Global Code Cleanup** - Veliko čišćenje i optimizacija kodne baze
+- 📦 **Modular Structure** - Poboljšana modularnost i separacija odgovornosti
+- 🔧 **Helper Classes** - Refaktorirani helper moduli za bolju čitljivost
+- 📝 **Code Standards** - Ujednačavanje coding standarda kroz cijeli projekt
+
+### Performance Improvements
+- ⚡ **Optimizirani SQL Upiti** - Brže izvođenje database operacija
+- 🚀 **Reduced Redundancy** - Uklanjanje dupliciranog koda
+- 💾 **Memory Optimization** - Smanjeno korištenje memorije
+- 📊 **Efficient Data Handling** - Optimiziran način rada s velikim skupovima podataka
+
+### Code Quality
+- ✅ **Improved Readability** - Čitljiviji i razumljiviji kod
+- 📚 **Better Documentation** - Poboljšani komentari i inline dokumentacija
+- 🎯 **Function Naming** - Dosljednije imenovanje funkcija i varijabli
+- 🔍 **Error Handling** - Jasnija i bolja obrada grešaka
+
+### Removed Legacy Code
+- 🗑️ **Deprecated Functions** - Uklonjene zastarjele funkcije
+- 🧼 **Unused Variables** - Očišćene nekorištene varijable
+- 📁 **Dead Code** - Uklonjen neaktivni kod
+- 🔄 **Obsolete Patterns** - Zamijenjeni zastarjeli paterni s modernijim rješenjima
+
+### CSS & JavaScript Optimization
+- 🎨 **CSS Cleanup** - Uklanjeni dupli stilovi i nekorištene CSS klase
+- ⚡ **JavaScript Refactor** - Optimiziran JS kod za bolje performanse
+- 📱 **Responsive Improvements** - Poboljšan responsive dizajn
+- 🔧 **Event Handling** - Optimiziran način rukovanja s eventima
+
+### Database Optimization
+- 🗄️ **Query Optimization** - Brži upiti s boljim indeksima
+- 🔗 **Foreign Keys** - Usklađeni svi foreign key constrainti
+- 📊 **Index Management** - Dodani nedostajući indeksi za bolje performanse
+- 🛡️ **Data Integrity** - Poboljšana integracija podataka
+
+### Security Enhancements
+- 🔐 **Input Validation** - Standardizirana validacija svih inputa
+- 🛡️ **SQL Injection Prevention** - Dosljedna upotreba prepared statements
+- 🧹 **XSS Protection** - Poboljšana zaštita od XSS napada
+- ✅ **Permission Checks** - Konzistentne provjere permisija
+
+### Developer Experience
+- 🔧 **Better Structure** - Lakše navigiranje kroz codebase
+- 📖 **Clear Patterns** - Jasni i konzistentni paterni
+- 🎯 **Maintainability** - Lakše održavanje i dodavanje novih funkcija
+- 🚀 **Faster Development** - Brži razvoj novih značajki
+
+### Files Affected
+- 📄 **Multiple Helper Classes** - Čišćenje svih helper klasa
+- 🎨 **CSS Files** - Optimizacija stilova
+- ⚡ **JavaScript Files** - Refaktoring JS modula
+- 🗄️ **Database Queries** - Poboljšanje SQL upita
+- 📋 **Page Files** - Cleanup PHP stranica
+
+### Technical Debt Reduction
+- 📉 **Reduced Complexity** - Smanjena složenost koda
+- 🔄 **Code Reusability** - Povećana mogućnost ponovne upotrebe
+- 🎯 **Single Responsibility** - Bolja primjena SRP principa
+- 📦 **Modularity** - Povećana modularnost sustava
+
+### Testing & Stability
+- ✅ **Improved Stability** - Stabilniji sustav s manje bugova
+- 🐛 **Bug Fixes** - Ispravljeni pronađeni bugovi tijekom čišćenja
+- 🔍 **Code Review** - Detaljni code review i ispravci
+- 📊 **Quality Assurance** - Poboljšana kvaliteta koda
+
+### User Impact
+- �� **Faster Loading** - Brže učitavanje stranica
+- 💪 **More Reliable** - Pouzdaniji sustav
+- 🎯 **Better Performance** - Bolje performanse svih funkcionalnosti
+- ✨ **Smoother Experience** - Ugodniji user experience
+
+---
