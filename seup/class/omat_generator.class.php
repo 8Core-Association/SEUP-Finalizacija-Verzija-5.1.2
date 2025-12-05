@@ -213,7 +213,7 @@ class Omat_Generator
                     posiljatelj_naziv,
                     datum_zaprimanja,
                     nacin_zaprimanja
-                FROM " . MAIN_DB_PREFIX . "a_zaprimanja
+                FROM " . MAIN_DB_PREFIX . "a_zaprimanje
                 WHERE fk_ecm_file = " . (int)$ecm_file_id . "
                 AND tip_dokumenta = '" . $this->db->escape($tip_dokumenta) . "'
                 ORDER BY datum_zaprimanja ASC";

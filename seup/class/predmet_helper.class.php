@@ -512,7 +512,7 @@ class Predmet_helper
                 LEFT JOIN " . MAIN_DB_PREFIX . "user u ON ef.fk_user_c = u.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "a_akti a ON ef.rowid = a.fk_ecm_file
                 LEFT JOIN " . MAIN_DB_PREFIX . "a_prilozi p ON ef.rowid = p.fk_ecm_file
-                LEFT JOIN " . MAIN_DB_PREFIX . "a_zaprimanja z ON ef.rowid = z.fk_ecm_file
+                LEFT JOIN " . MAIN_DB_PREFIX . "a_zaprimanje z ON ef.rowid = z.fk_ecm_file
                 WHERE ef.filepath = '" . $db->escape(rtrim($relative_path, '/')) . "'
                 AND ef.entity = " . $conf->entity . "
                 ORDER BY 
