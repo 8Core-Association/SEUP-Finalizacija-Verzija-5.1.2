@@ -364,6 +364,64 @@ CREATE TABLE IF NOT EXISTS llx_a_otprema (
 
 
 -- =============================================================================
+-- TABLE: a_zaprimanja
+-- Purpose: Incoming document reception tracking
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
+    ID_zaprimanja int(11) NOT NULL AUTO_INCREMENT,
+
+    -- Link to subject/case
+    ID_predmeta int(11) NOT NULL COMMENT 'Link to a_predmet',
+
+    -- Link to document (akt or prilog)
+    fk_ecm_file int(11) DEFAULT NULL COMMENT 'Link to received document (akt/prilog)',
+    tip_dokumenta enum('akt','prilog','nedodjeljeni') DEFAULT 'nedodjeljeni' COMMENT 'Type of received document',
+
+    -- Sender (link to third parties)
+    fk_posiljatelj int(11) DEFAULT NULL COMMENT 'Link to llx_societe',
+    posiljatelj_naziv varchar(255) DEFAULT NULL COMMENT 'Sender name (fallback if not in societe)',
+
+    -- Reception date and method
+    datum_zaprimanja datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Reception date and time',
+    nacin_zaprimanja enum('posta','email','rucno','fax','web','sluzben_put') DEFAULT 'posta' COMMENT 'Reception method',
+
+    -- Number of attachments
+    broj_priloga int(11) DEFAULT 1 COMMENT 'Number of physical attachments',
+
+    -- Reception confirmation (ECM)
+    fk_potvrda_ecm_file int(11) DEFAULT NULL COMMENT 'Link to reception confirmation (return receipt, signature)',
+
+    -- Description
+    opis_zaprimanja text COMMENT 'Brief description of received content',
+    napomena text COMMENT 'Internal note',
+
+    -- Metadata
+    fk_user_zaprimio int(11) NOT NULL COMMENT 'User who received the document',
+    datum_kreiranja datetime DEFAULT CURRENT_TIMESTAMP,
+    entity int(11) NOT NULL DEFAULT 1,
+
+    PRIMARY KEY (ID_zaprimanja),
+    KEY idx_predmet (ID_predmeta),
+    KEY idx_posiljatelj (fk_posiljatelj),
+    KEY idx_ecm_file (fk_ecm_file),
+    KEY idx_datum (datum_zaprimanja),
+    KEY fk_user (fk_user_zaprimio),
+    KEY fk_potvrda (fk_potvrda_ecm_file),
+
+    CONSTRAINT fk_zaprimanja_predmet FOREIGN KEY (ID_predmeta)
+        REFERENCES llx_a_predmet(ID_predmeta) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_zaprimanja_ecm FOREIGN KEY (fk_ecm_file)
+        REFERENCES llx_ecm_files(rowid) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_zaprimanja_posiljatelj FOREIGN KEY (fk_posiljatelj)
+        REFERENCES llx_societe(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_zaprimanja_user FOREIGN KEY (fk_user_zaprimio)
+        REFERENCES llx_user(rowid) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_zaprimanja_potvrda FOREIGN KEY (fk_potvrda_ecm_file)
+        REFERENCES llx_ecm_files(rowid) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Incoming document reception tracking';
+
+
+-- =============================================================================
 -- INITIAL DATA (Optional)
 -- =============================================================================
 -- You can add initial/default data here if needed
