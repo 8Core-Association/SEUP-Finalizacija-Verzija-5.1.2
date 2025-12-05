@@ -584,3 +584,61 @@ Dokumentacija ažurirana: README, struktura, changelog.
 - 📱 **Mobile Friendly** - Optimizirano za sve veličine ekrana
 
 ---
+
+## 5.2.3 – Database Consistency & Digital Signature Detection
+
+**Datum:** 05.12.2025
+
+### Database Table Name Fixes
+- 🔧 **Table Name Consistency** - Ispravljen naziv tablice sa `a_zaprimanja` na `a_zaprimanje`
+- 📊 **Sync with Database** - Usklađen PHP kod s postojećom bazom podataka
+- 🔗 **Updated References** - Ažurirane reference u svim helper klasama
+
+### Affected Files
+- ✅ **zaprimanje_helper.class.php** - Svi SQL upiti sada koriste `a_zaprimanje`
+  - `ensureZaprimanjaTable()` - Kreiranje tablice
+  - `registrirajZaprimanje()` - Insert operacija
+  - `ensurePotvrdaColumn()` - ALTER TABLE naredbe
+  - Svi SELECT, UPDATE, DELETE upiti
+
+- ✅ **predmet_helper.class.php** - LEFT JOIN ispravljen
+  - JOIN naredba sada koristi `a_zaprimanje`
+  - Dohvaćanje zaprimanja povezanih s dokumentima
+
+- ✅ **omat_generator.class.php** - SELECT upit ispravljen
+  - Query za dohvaćanje podataka o zaprimanju
+  - Generiranje OMAT brojeva s ispravnom tablicom
+
+### Digital Signature Detection Enhancement
+- 🔐 **Dynamic Format Detection** - Automatska detekcija formata digitalnog potpisa
+- 📄 **PKCS#7 Support** - Podrška za PKCS#7 potpise (PDF standard)
+- 🔒 **XMLDSig Support** - Podrška za XMLDSig potpise (XML format)
+- 🎯 **Smart Detection** - Inteligentno prepoznavanje formata bez hardcodiranja
+
+### Digital_Signature_Detector Class Updates
+- 🔧 **Format Flexibility** - Klasa sada podržava oba formata potpisa
+  - Automatski detektira PKCS#7 format
+  - Automatski detektira XMLDSig format
+  - Vraća odgovarajući format za OpenSSL funkcije
+
+- ⚡ **Improved Performance** - Optimizirani regex za detekciju formata
+  - Brže prepoznavanje PKCS#7 potpisa
+  - Brže prepoznavanje XMLDSig potpisa
+
+### Tehničke značajke
+- 🛠️ **Backward Compatibility** - Sve stare metode i dalje rade
+- 🔍 **Better Error Handling** - Jasniji error messages
+- 📊 **Database Integrity** - Konzistentni nazivi tablica
+- 🔐 **Security** - Poboljšana sigurnost detekcije potpisa
+
+### Bug Fixes
+- 🐛 **Fixed "Table doesn't exist" Error** - Riješena greška kod pristupanja tablici zaprimanja
+- ✅ **Consistent Naming** - Uklonjena neslaganja u nazivima tablica
+- 🔧 **SQL Query Errors** - Riješene greške u SQL upitima zbog krivog naziva tablice
+
+### User Impact
+- ⚡ **Immediate Fix** - Sustav sada pravilno pristupa tablici zaprimanja
+- 📈 **Better Reliability** - Smanjeni errors i poboljšana stabilnost
+- 🎯 **Accurate Data** - Ispravno dohvaćanje svih podataka o zaprimanjima
+
+---
