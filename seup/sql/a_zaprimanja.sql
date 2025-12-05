@@ -13,15 +13,19 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
 
   -- Veza s dokumentom (akt ili prilog)
   fk_ecm_file INT(11) DEFAULT NULL COMMENT 'Link na zaprimljeni dokument (akt/prilog)',
-  tip_dokumenta ENUM('akt', 'prilog', 'nedodjeljeni') DEFAULT 'nedodjeljeni' COMMENT 'Tip zaprimljenog dokumenta',
+  tip_dokumenta VARCHAR(50) DEFAULT 'nedodjeljeno' COMMENT 'Tip zaprimljenog dokumenta',
 
-  -- Pošiljatelj (veza na a_posiljatelji)
-  fk_posiljatelj INT(11) UNSIGNED DEFAULT NULL COMMENT 'Link na a_posiljatelji',
-  posiljatelj_naziv VARCHAR(255) DEFAULT NULL COMMENT 'Naziv pošiljatelja (fallback ako nije u a_posiljatelji)',
+  -- Pošiljatelj (veza na llx_societe)
+  fk_posiljatelj INT(11) DEFAULT NULL COMMENT 'Link na llx_societe',
+  posiljatelj_naziv VARCHAR(255) DEFAULT NULL COMMENT 'Naziv pošiljatelja (fallback)',
+  posiljatelj_broj VARCHAR(100) DEFAULT NULL COMMENT 'Broj pošiljke',
 
   -- Datum i način zaprimanja
   datum_zaprimanja DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Datum i vrijeme zaprimanja',
-  nacin_zaprimanja ENUM('posta', 'email', 'rucno', 'fax', 'web', 'sluzben_put') DEFAULT 'posta' COMMENT 'Način zaprimanja',
+  nacin_zaprimanja VARCHAR(50) DEFAULT 'posta' COMMENT 'Način zaprimanja',
+
+  -- Link na akt ako je ovo prilog
+  fk_akt_za_prilog INT(11) DEFAULT NULL COMMENT 'Link na akt ako je prilog',
 
   -- Broj priloga
   broj_priloga INT(11) DEFAULT 1 COMMENT 'Broj fizičkih priloga',
@@ -34,7 +38,7 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
   napomena TEXT COMMENT 'Interna napomena',
 
   -- Metapodaci
-  fk_user_zaprimio INT(11) NOT NULL COMMENT 'Korisnik koji je zaprimio',
+  fk_user_creat INT(11) NOT NULL COMMENT 'Korisnik koji je zaprimio',
   datum_kreiranja DATETIME DEFAULT CURRENT_TIMESTAMP,
   entity INT(11) NOT NULL DEFAULT 1,
 
@@ -43,7 +47,21 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
   KEY idx_posiljatelj (fk_posiljatelj),
   KEY idx_ecm_file (fk_ecm_file),
   KEY idx_datum (datum_zaprimanja),
-  KEY fk_user (fk_user_zaprimio),
-  KEY fk_potvrda (fk_potvrda_ecm_file)
+  KEY fk_user (fk_user_creat),
+  KEY fk_potvrda (fk_potvrda_ecm_file),
+  KEY fk_akt (fk_akt_za_prilog),
+
+  CONSTRAINT fk_zaprimanja_predmet FOREIGN KEY (ID_predmeta)
+    REFERENCES llx_a_predmet(ID_predmeta) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_zaprimanja_ecm FOREIGN KEY (fk_ecm_file)
+    REFERENCES llx_ecm_files(rowid) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_zaprimanja_posiljatelj FOREIGN KEY (fk_posiljatelj)
+    REFERENCES llx_societe(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_zaprimanja_user FOREIGN KEY (fk_user_creat)
+    REFERENCES llx_user(rowid) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_zaprimanja_potvrda FOREIGN KEY (fk_potvrda_ecm_file)
+    REFERENCES llx_ecm_files(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_zaprimanja_akt FOREIGN KEY (fk_akt_za_prilog)
+    REFERENCES llx_a_akti(ID_akta) ON DELETE SET NULL ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Evidencija zaprimljene dokumentacije';

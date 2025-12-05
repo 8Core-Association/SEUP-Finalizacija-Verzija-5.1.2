@@ -14,7 +14,7 @@ class Zaprimanje_Helper
 {
     public static function ensureZaprimanjaTable($db)
     {
-        $table_name = MAIN_DB_PREFIX . "a_zaprimanje";
+        $table_name = MAIN_DB_PREFIX . "a_zaprimanja";
 
         $sql_check = "SHOW TABLES LIKE '" . $table_name . "'";
         $resql = $db->query($sql_check);
@@ -25,13 +25,15 @@ class Zaprimanje_Helper
                 ID_predmeta INT(11) NOT NULL COMMENT 'Veza na a_predmet',
                 fk_ecm_file INT(11) DEFAULT NULL COMMENT 'Link na zaprimljeni dokument',
                 tip_dokumenta VARCHAR(50) DEFAULT 'nedodjeljeno' COMMENT 'Tip dokumenta',
-                fk_posiljatelj INT(11) DEFAULT NULL COMMENT 'Link na a_posiljatelji',
+                fk_posiljatelj INT(11) DEFAULT NULL COMMENT 'Link na llx_societe',
                 posiljatelj_naziv VARCHAR(255) DEFAULT NULL COMMENT 'Naziv pošiljatelja',
                 posiljatelj_broj VARCHAR(100) DEFAULT NULL COMMENT 'Broj pošiljke',
-                datum_zaprimanja DATE NOT NULL COMMENT 'Datum zaprimanja',
+                datum_zaprimanja DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Datum zaprimanja',
                 nacin_zaprimanja VARCHAR(50) DEFAULT 'posta' COMMENT 'Način zaprimanja',
                 fk_akt_za_prilog INT(11) DEFAULT NULL COMMENT 'Link na akt ako je prilog',
+                broj_priloga INT(11) DEFAULT 1 COMMENT 'Broj fizičkih priloga',
                 fk_potvrda_ecm_file INT(11) DEFAULT NULL COMMENT 'Link na potvrdu',
+                opis_zaprimanja TEXT COMMENT 'Opis zaprimljenog sadržaja',
                 napomena TEXT COMMENT 'Napomena',
                 fk_user_creat INT(11) NOT NULL COMMENT 'Kreator',
                 datum_kreiranja DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -42,15 +44,28 @@ class Zaprimanje_Helper
                 KEY idx_ecm_file (fk_ecm_file),
                 KEY idx_datum (datum_zaprimanja),
                 KEY fk_user (fk_user_creat),
-                KEY fk_potvrda (fk_potvrda_ecm_file)
+                KEY fk_potvrda (fk_potvrda_ecm_file),
+                KEY fk_akt (fk_akt_za_prilog),
+                CONSTRAINT fk_zaprimanja_predmet FOREIGN KEY (ID_predmeta)
+                    REFERENCES llx_a_predmet(ID_predmeta) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_zaprimanja_ecm FOREIGN KEY (fk_ecm_file)
+                    REFERENCES llx_ecm_files(rowid) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_zaprimanja_posiljatelj FOREIGN KEY (fk_posiljatelj)
+                    REFERENCES llx_societe(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
+                CONSTRAINT fk_zaprimanja_user FOREIGN KEY (fk_user_creat)
+                    REFERENCES llx_user(rowid) ON DELETE RESTRICT ON UPDATE CASCADE,
+                CONSTRAINT fk_zaprimanja_potvrda FOREIGN KEY (fk_potvrda_ecm_file)
+                    REFERENCES llx_ecm_files(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
+                CONSTRAINT fk_zaprimanja_akt FOREIGN KEY (fk_akt_za_prilog)
+                    REFERENCES llx_a_akti(ID_akta) ON DELETE SET NULL ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
 
             $result = $db->query($sql);
             if (!$result) {
-                dol_syslog("Error creating a_zaprimanje table: " . $db->lasterror(), LOG_ERR);
+                dol_syslog("Error creating a_zaprimanja table: " . $db->lasterror(), LOG_ERR);
                 return false;
             }
-            dol_syslog("Table a_zaprimanje created successfully", LOG_INFO);
+            dol_syslog("Table a_zaprimanja created successfully", LOG_INFO);
         }
 
         return true;
@@ -82,7 +97,7 @@ class Zaprimanje_Helper
         if ($posiljatelj_naziv === null) {
             $posiljatelj_naziv = 'Nepoznat pošiljatelj';
         }
-        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_zaprimanje (
+        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_zaprimanja (
                     fk_ecm_file,
                     ID_predmeta,
                     fk_posiljatelj,
@@ -113,7 +128,7 @@ class Zaprimanje_Helper
         $resql = $db->query($sql);
 
         if ($resql) {
-            return $db->last_insert_id(MAIN_DB_PREFIX . "a_zaprimanje");
+            return $db->last_insert_id(MAIN_DB_PREFIX . "a_zaprimanja");
         }
 
         return false;
@@ -121,11 +136,11 @@ class Zaprimanje_Helper
 
     public static function ensurePotvrdaColumn($db)
     {
-        $sql = "SHOW COLUMNS FROM " . MAIN_DB_PREFIX . "a_zaprimanje LIKE 'fk_potvrda_ecm_file'";
+        $sql = "SHOW COLUMNS FROM " . MAIN_DB_PREFIX . "a_zaprimanja LIKE 'fk_potvrda_ecm_file'";
         $resql = $db->query($sql);
 
         if ($resql && $db->num_rows($resql) == 0) {
-            $alter_sql = "ALTER TABLE " . MAIN_DB_PREFIX . "a_zaprimanje
+            $alter_sql = "ALTER TABLE " . MAIN_DB_PREFIX . "a_zaprimanja
                           ADD COLUMN fk_potvrda_ecm_file INT(11) DEFAULT NULL AFTER fk_akt_za_prilog,
                           ADD KEY fk_potvrda (fk_potvrda_ecm_file)";
             $db->query($alter_sql);
@@ -187,7 +202,7 @@ class Zaprimanje_Helper
                     a.urb_broj as akt_urb_broj,
                     pot.filename as potvrda_filename,
                     pot.filepath as potvrda_filepath
-                FROM " . MAIN_DB_PREFIX . "a_zaprimanje z
+                FROM " . MAIN_DB_PREFIX . "a_zaprimanja z
                 LEFT JOIN " . MAIN_DB_PREFIX . "user u ON z.fk_user_creat = u.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "ecm_files e ON z.fk_ecm_file = e.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "a_posiljatelji p ON z.fk_posiljatelj = p.rowid
@@ -235,7 +250,7 @@ class Zaprimanje_Helper
                     p.naziv_predmeta,
                     CONCAT(p.klasa_br, '-', p.sadrzaj, '/', p.godina, '-', p.dosje_broj, '/', p.predmet_rbr) as klasa_format,
                     pos.naziv as posiljatelj_registry_naziv
-                FROM " . MAIN_DB_PREFIX . "a_zaprimanje z
+                FROM " . MAIN_DB_PREFIX . "a_zaprimanja z
                 LEFT JOIN " . MAIN_DB_PREFIX . "user u ON z.fk_user_creat = u.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "ecm_files e ON z.fk_ecm_file = e.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet p ON z.ID_predmeta = p.ID_predmeta
@@ -287,7 +302,7 @@ class Zaprimanje_Helper
                     p.adresa as posiljatelj_adresa,
                     p.email as posiljatelj_email,
                     p.telefon as posiljatelj_telefon
-                FROM " . MAIN_DB_PREFIX . "a_zaprimanje z
+                FROM " . MAIN_DB_PREFIX . "a_zaprimanja z
                 LEFT JOIN " . MAIN_DB_PREFIX . "user u ON z.fk_user_creat = u.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "ecm_files e ON z.fk_ecm_file = e.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "a_posiljatelji p ON z.fk_posiljatelj = p.rowid
@@ -305,7 +320,7 @@ class Zaprimanje_Helper
     public static function deleteZaprimanje($db, $ID_zaprimanja)
     {
         try {
-            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_zaprimanje
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_zaprimanja
                     WHERE ID_zaprimanja = " . (int)$ID_zaprimanja;
 
             $resql = $db->query($sql);
@@ -339,7 +354,7 @@ class Zaprimanje_Helper
         $napomena = null
     ) {
         try {
-            $sql = "UPDATE " . MAIN_DB_PREFIX . "a_zaprimanje SET
+            $sql = "UPDATE " . MAIN_DB_PREFIX . "a_zaprimanja SET
                         datum_zaprimanja = '" . $db->escape($datum_zaprimanja) . "',
                         nacin_zaprimanja = '" . $db->escape($nacin_zaprimanja) . "',
                         posiljatelj_naziv = '" . $db->escape($posiljatelj_naziv) . "',
@@ -492,7 +507,7 @@ class Zaprimanje_Helper
                     p.naziv_predmeta,
                     CONCAT(p.klasa_br, '-', p.sadrzaj, '/', p.godina, '-', p.dosje_broj, '/', p.predmet_rbr) as klasa_format,
                     DATE_FORMAT(z.datum_zaprimanja, '%d.%m.%Y') as datum_format
-                FROM " . MAIN_DB_PREFIX . "a_zaprimanje z
+                FROM " . MAIN_DB_PREFIX . "a_zaprimanja z
                 LEFT JOIN " . MAIN_DB_PREFIX . "ecm_files e ON z.fk_ecm_file = e.rowid
                 LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet p ON z.ID_predmeta = p.ID_predmeta
                 WHERE 1=1";

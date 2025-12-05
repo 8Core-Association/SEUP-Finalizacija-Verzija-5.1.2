@@ -375,15 +375,19 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
 
     -- Link to document (akt or prilog)
     fk_ecm_file int(11) DEFAULT NULL COMMENT 'Link to received document (akt/prilog)',
-    tip_dokumenta enum('akt','prilog','nedodjeljeni') DEFAULT 'nedodjeljeni' COMMENT 'Type of received document',
+    tip_dokumenta varchar(50) DEFAULT 'nedodjeljeno' COMMENT 'Type of received document',
 
     -- Sender (link to third parties)
     fk_posiljatelj int(11) DEFAULT NULL COMMENT 'Link to llx_societe',
-    posiljatelj_naziv varchar(255) DEFAULT NULL COMMENT 'Sender name (fallback if not in societe)',
+    posiljatelj_naziv varchar(255) DEFAULT NULL COMMENT 'Sender name (fallback)',
+    posiljatelj_broj varchar(100) DEFAULT NULL COMMENT 'Sender tracking number',
 
     -- Reception date and method
     datum_zaprimanja datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Reception date and time',
-    nacin_zaprimanja enum('posta','email','rucno','fax','web','sluzben_put') DEFAULT 'posta' COMMENT 'Reception method',
+    nacin_zaprimanja varchar(50) DEFAULT 'posta' COMMENT 'Reception method',
+
+    -- Link to akt if this is an attachment
+    fk_akt_za_prilog int(11) DEFAULT NULL COMMENT 'Link to akt if this is an attachment',
 
     -- Number of attachments
     broj_priloga int(11) DEFAULT 1 COMMENT 'Number of physical attachments',
@@ -396,7 +400,7 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
     napomena text COMMENT 'Internal note',
 
     -- Metadata
-    fk_user_zaprimio int(11) NOT NULL COMMENT 'User who received the document',
+    fk_user_creat int(11) NOT NULL COMMENT 'User who received the document',
     datum_kreiranja datetime DEFAULT CURRENT_TIMESTAMP,
     entity int(11) NOT NULL DEFAULT 1,
 
@@ -405,8 +409,9 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
     KEY idx_posiljatelj (fk_posiljatelj),
     KEY idx_ecm_file (fk_ecm_file),
     KEY idx_datum (datum_zaprimanja),
-    KEY fk_user (fk_user_zaprimio),
+    KEY fk_user (fk_user_creat),
     KEY fk_potvrda (fk_potvrda_ecm_file),
+    KEY fk_akt (fk_akt_za_prilog),
 
     CONSTRAINT fk_zaprimanja_predmet FOREIGN KEY (ID_predmeta)
         REFERENCES llx_a_predmet(ID_predmeta) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -414,10 +419,12 @@ CREATE TABLE IF NOT EXISTS llx_a_zaprimanja (
         REFERENCES llx_ecm_files(rowid) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_zaprimanja_posiljatelj FOREIGN KEY (fk_posiljatelj)
         REFERENCES llx_societe(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_zaprimanja_user FOREIGN KEY (fk_user_zaprimio)
+    CONSTRAINT fk_zaprimanja_user FOREIGN KEY (fk_user_creat)
         REFERENCES llx_user(rowid) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_zaprimanja_potvrda FOREIGN KEY (fk_potvrda_ecm_file)
-        REFERENCES llx_ecm_files(rowid) ON DELETE SET NULL ON UPDATE CASCADE
+        REFERENCES llx_ecm_files(rowid) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_zaprimanja_akt FOREIGN KEY (fk_akt_za_prilog)
+        REFERENCES llx_a_akti(ID_akta) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Incoming document reception tracking';
 
 
